@@ -1,0 +1,128 @@
+<!--<nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #002B5B;">-->
+<!--    <div class="container-fluid">-->
+<!--        <a class="navbar-brand" href="#">VEI Hospital</a>-->
+<!--&lt;!&ndash;<nav class="navbar navbar-expand-lg navbar-dark bg-primary">&ndash;&gt;-->
+<!--&lt;!&ndash;  <div class="container-fluid">&ndash;&gt;-->
+<!--&lt;!&ndash;    <a class="navbar-brand" href="/home">VEI Hospital</a>&ndash;&gt;-->
+<!--    <div class="collapse navbar-collapse">-->
+<!--      <ul class="navbar-nav me-auto">-->
+<!--        <li class="nav-item"><a class="nav-link" href="/about">About</a></li>-->
+<!--        <li class="nav-item"><a class="nav-link" href="#">Dashboard</a></li>-->
+<!--        <li class="nav-item"><a class="nav-link" href="/doctor-biodata">Doctors Biodata</a></li>-->
+<!--        <li class="nav-item"><a class="nav-link" href="#">Report</a></li>-->
+<!--      </ul>-->
+<!--      <span class="navbar-text"><a href="/logout" class="text-white">Logout</a></span>-->
+<!--    </div>-->
+<!--  </div>-->
+<!--</nav>-->
+
+
+<!--<nav class="navbar navbar-expand-lg" style="background-color: #001f3f; height: 70px;">-->
+<!--  <div class="container-fluid">-->
+<!--    <a class="navbar-brand text-white fw-bold" href="{{ url_for('home') }}"> VEI Hospital</a>-->
+
+<!--    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown">-->
+<!--      <span class="navbar-toggler-icon"></span>-->
+<!--    </button>-->
+
+<!--    <div class="collapse navbar-collapse" id="navbarNavDropdown">-->
+<!--      <ul class="navbar-nav me-auto mb-2 mb-lg-0">-->
+<!--        <li class="nav-item">-->
+<!--          <a class="nav-link text-white {% if request.path == '/about' %}bg-light text-dark rounded px-2{% endif %}" href="{{ url_for('about') }}">About</a>-->
+<!--        </li>-->
+<!--        <li class="nav-item">-->
+<!--          <a class="nav-link text-white {% if request.path == '/home' %}bg-light text-dark rounded px-2{% endif %}" href="{{ url_for('home') }}">Dashboard</a>-->
+<!--        </li>-->
+<!--        <li class="nav-item">-->
+<!--          <a class="nav-link text-white {% if '/doctor-biodata' in request.path %}bg-light text-dark rounded px-2{% endif %}" href="{{ url_for('doctor_biodata') }}">Doctors Biodata</a>-->
+<!--        </li>-->
+<!--        <li class="nav-item">-->
+<!--          <a class="nav-link text-white {% if request.path == '/reports' %}bg-light text-dark rounded px-2{% endif %}" href="#">Reports</a>-->
+<!--        </li>-->
+<!--      </ul>-->
+
+<!--      {% if session.get('user') %}-->
+<!--      <ul class="navbar-nav ms-auto">-->
+<!--        <li class="nav-item dropdown">-->
+<!--          <a class="nav-link dropdown-toggle text-white d-flex align-items-center" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">-->
+<!--            <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" width="30" height="30" class="rounded-circle me-2">-->
+<!--            {{ session['user'] }}-->
+<!--          </a>-->
+<!--          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">-->
+<!--            <li><a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a></li>-->
+<!--          </ul>-->
+<!--        </li>-->
+<!--      </ul>-->
+<!--      {% endif %}-->
+<!--    </div>-->
+<!--  </div>-->
+<!--</nav>-->
+
+
+<nav class="navbar navbar-expand-lg" style="background-color: #001f3f; height: 70px;">
+  <div class="container-fluid">
+    <a class="navbar-brand text-white fw-bold" href="{{ url_for('home') }}">VEI Hospital</a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarNavDropdown">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item">
+          <a class="nav-link nav-custom {% if request.path == '/about' %}active-nav{% endif %}" href="{{ url_for('about') }}">About</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link nav-custom {% if request.path == '/home' %}active-nav{% endif %}" href="{{ url_for('home') }}">Dashboard</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link nav-custom {% if '/doctor-biodata' in request.path %}active-nav{% endif %}" href="{{ url_for('doctor_biodata') }}">Doctors Biodata</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link nav-custom {% if request.path == '/reports' %}active-nav{% endif %}" href="#">Reports</a>
+        </li>
+      </ul>
+
+      {% if session.get('user') %}
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle text-white d-flex align-items-center" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" width="30" height="30" class="rounded-circle me-2">
+            {{ session['user'] }}
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a></li>
+          </ul>
+        </li>
+      </ul>
+      {% endif %}
+    </div>
+  </div>
+</nav>
+
+<style>
+/* Universal nav link style */
+.nav-custom {
+  color: white !important;
+  padding: 8px 15px;
+  margin-right: 5px;
+  border-radius: 8px;
+  transition: background-color 0.3s;
+}
+
+/* On hover: soft blue */
+.nav-custom:hover {
+  background-color: #3c8dbc;
+  color: white !important;
+}
+
+/* Active tab: sky blue background, bold text */
+.active-nav {
+  background-color: #3c8dbc !important;
+  font-weight: bold;
+  color: white !important;
+}
+</style>
+
+
+

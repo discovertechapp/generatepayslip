@@ -1,0 +1,3226 @@
+{% extends "base.html" %}
+{% set hide_sidebar = True %}
+{% block title %}New Doctor Biodata{% endblock %}
+
+{% block extra_styles %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<style>
+    body {
+        background-color: #e8f3f9;
+        font-family: 'Segoe UI', sans-serif;
+    }
+
+    .form-container {
+        max-width: 1100px;
+        margin: 30px auto;
+        display: flex;
+        background-color: white;
+        border-radius: 20px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+
+    .form-steps {
+        width: 30%;
+        background: #f5f9fc;
+        padding: 30px;
+        border-right: 1px solid #ddd;
+    }
+
+    .step {
+        padding: 15px 0;
+        font-weight: 500;
+        color: #999;
+        position: relative;
+    }
+
+    .step.active {
+        color: #0d47a1;
+        font-weight: 700;
+    }
+
+    .step::before {
+        content: counter(step);
+        counter-increment: step;
+        width: 24px;
+        height: 24px;
+        display: inline-block;
+        border-radius: 50%;
+        background: #ddd;
+        color: white;
+        text-align: center;
+        margin-right: 10px;
+        line-height: 24px;
+    }
+
+    .step.active::before {
+        background: #0d47a1;
+    }
+
+    .form-content {
+        width: 70%;
+        padding: 30px;
+    }
+
+    .form-section {
+        display: none;
+    }
+
+    .form-section.active {
+        display: block;
+    }
+
+    .language-row .form-check {
+    margin-bottom: 0;
+    }
+
+
+  select[multiple] option:checked {
+  background-color: #cce5ff !important; /* Light blue background */
+  color: #000; /* Ensure text remains readable */
+}
+
+select[multiple] {
+  height: 120px; /* Optional: taller dropdown for better visibility */
+}
+
+/* Enhance form labels */
+.form-label {
+  font-weight: 600;
+  color: #0d47a1; /* Dark blue to match your active step */
+  font-size: 0.95rem;
+}
+
+/* Style inputs and selects */
+.form-control,
+.form-select {
+  border: 1px solid #ccc;
+  background-color: #fefeff; /* Very light background */
+  font-size: 0.94rem;
+  border-radius: 0.4rem;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+/* Focus effect */
+.form-control:focus,
+.form-select:focus {
+  border-color: #0d47a1;
+  box-shadow: 0 0 6px rgba(13, 71, 161, 0.2);
+  outline: none;
+}
+
+/* Placeholder text (optional) */
+.form-control::placeholder {
+  color: #999;
+  font-style: italic;
+}
+
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <a href="{{ url_for('doctor_biodata') }}" class="btn btn-secondary mb-3">← Back to Doctor Biodata</a>
+</div>
+
+
+
+<div class="form-container">
+    <!-- Left Side: Steps -->
+    <div class="form-steps">
+        <div class="step active" data-step="0">Personal Details</div>
+        <div class="step" data-step="1">Experience</div>
+        <div class="step" data-step="2">Educational Qualifications</div>
+        <div class="step" data-step="3">Proof of Address</div>
+        <div class="step" data-step="4">Academic Activities</div>
+        <div class="step" data-step="5">Course</div>
+        <div class="step" data-step="6">Indian Defense</div>
+        <div class="step" data-step="7">MCI/MNC</div>
+        <div class="step" data-step="8">Publication</div>
+        <div class="step" data-step="9">Research Projects</div>
+        <div class="step" data-step="10">Salary</div>
+        <div class="step" data-step="11">Current Appointment / Present Designation</div>
+        <div class="step" data-step="12">Other Activities</div>
+        <div class="step" data-step="13">Review & Submit</div>
+    </div>
+
+    <!-- Right Side: Form -->
+
+    <form method="POST" enctype="multipart/form-data" class="form-content" id="biodata-form">
+
+
+      <!-- Auto-Fill Panel (Adjusted Width) -->
+      <div class="bg-light border p-3 rounded mb-4" style="max-width: 100%; margin-left: 0;">
+        <h5 class="mb-3">Auto-Fill Doctor Biodata</h5>
+        <div class="row align-items-end">
+          <!-- Export Template Button -->
+          <div class="col-md-4 mb-2">
+            <label class="form-label">Download Template</label><br>
+            <a href="{{ url_for('download_template') }}" class="btn btn-outline-primary btn-sm">Export Template (CSV/XLSX)</a>
+          </div>
+
+          <!-- File Upload -->
+          <div class="col-md-5 mb-2">
+            <label class="form-label">Upload CSV/XLSX File</label>
+            <input type="file" class="form-control" id="biodataFile" accept=".csv,.xlsx">
+          </div>
+
+          <!-- Auto-Fill Trigger -->
+          <div class="col-md-3 mb-2">
+            <button type="button" class="btn btn-success w-100" onclick="autoFillFormFromFile()">Auto-Fill Form</button>
+          </div>
+        </div>
+      </div>
+
+
+
+
+
+
+<!-- Step 1 -->
+<div class="form-section active" data-step="0">
+  <h5>Personal Details</h5>
+  <div class="p-3 mb-4 rounded bg-light border border-primary shadow-sm">
+
+  {% set dropdowns = form_config.personal.dropdowns %}
+  {% set prefills = prefills or {} %}
+
+  <div class="row align-items-end">
+    <!-- Name Prefix -->
+    <div class="col-md-2 mb-3">
+      <label class="form-label">Name Prefix</label>
+      <select name="name_prefix" class="form-select form-select-sm">
+        {% for opt in dropdowns['name_prefix'] %}
+          <option value="{{ opt }}" {% if prefills.name_prefix == opt %}selected{% endif %}>{{ opt }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <!-- Name (as in degree) -->
+    <div class="col-md-7 mb-3">
+      <label class="form-label">Name (As in Degree Certificate)</label>
+      <input type="text" name="name_(as_in_degree_certificate)" class="form-control form-control-sm"
+             value="{{ prefills['name_(as_in_degree_certificate)'] }}">
+    </div>
+
+
+
+
+  <!-- Photo Upload + Preview in Single Box -->
+  <div class="col-md-3 mb-3 d-flex justify-content-end">
+    <label for="photoInput" class="w-100" style="cursor: pointer;">
+      <div id="photoPreview" class="border rounded bg-light d-flex align-items-center justify-content-center"
+           style="width: 100px; height: 120px; overflow: hidden;">
+        {% if prefills.photo %}
+          <img id="photoImage" src="{{ url_for('static', filename='photo/' ~ prefills.photo) }}"
+               class="img-fluid h-100 w-100 object-fit-contain">
+        {% else %}
+          <span class="text-muted text-center">Click to<br>Upload Photo</span>
+        {% endif %}
+      </div>
+    </label>
+
+    <!-- Hidden File Input -->
+    <input type="file" id="photoInput" name="photo" class="d-none" accept="image/*" onchange="previewPhoto(event)">
+  </div>
+</div>
+
+
+
+
+
+  <div class="row">
+    <!-- User ID -->
+    <div class="col-md-3 mb-3">
+      <label class="form-label">Employee ID</label>
+      <input type="text" name="user_id" class="form-control form-control-sm" value="{{ prefills.user_id }}">
+    </div>
+
+    <!-- Date of Birth -->
+    <div class="col-md-3 mb-3">
+      <label class="form-label">Date Of Birth</label>
+<!--      <input type="date" name="date_of_birth" class="form-control form-control-sm" value="{{ prefills.date_of_birth }}" onchange="calculateAge(this.value)">-->
+        <input type="date" name="date_of_birth" class="form-control form-control-sm"
+               value="{{ prefills.date_of_birth if prefills else '' }}"
+               onchange="calculateAge(this.value)">
+    </div>
+
+    <!-- Age (readonly) -->
+    <div class="col-md-3 mb-3">
+      <label class="form-label">Age</label>
+                <input type="text" name="age" id="ageField"
+               class="form-control form-control-sm" readonly
+               value="{{ prefills.age if prefills else '' }}">
+<!--      <input type="text" name="age" id="ageField" class="form-control form-control-sm" readonly value="{{ prefills.age }}">-->
+    </div>
+
+    <!-- Gender -->
+    <div class="col-md-3 mb-3">
+      <label class="form-label">Gender</label>
+      <select name="gender" class="form-select form-select-sm">
+        {% for opt in dropdowns['gender'] %}
+          <option value="{{ opt }}" {% if prefills.gender == opt %}selected{% endif %}>{{ opt }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+
+
+
+  <div class="row">
+  <!-- PAN Number -->
+  <div class="col-md-3 mb-3">
+    <label class="form-label">PAN Number</label>
+    <input type="text" name="pan_number" class="form-control" value="{{ prefills.pan_number }}">
+  </div>
+
+  <!-- Aadhar Number -->
+  <div class="col-md-3 mb-3">
+    <label class="form-label">Aadhar Number</label>
+    <input type="text" name="aadhar_number" class="form-control" value="{{ prefills.aadhar_number }}">
+  </div>
+
+<!-- Upload PAN -->
+<div class="col-md-3 mb-3">
+  <label class="form-label d-block">Upload PAN</label>
+  <button type="button"
+          class="form-control btn btn-sm btn-outline-primary"
+          onclick="document.getElementById('pan_file').click()">Upload</button>
+  <input type="file" name="pan_number_attachment" id="pan_file" class="d-none"
+         onchange="document.getElementById('pan_status').textContent = '✔️ PAN Attached'">
+  <div id="pan_status" class="text-success small mt-1"></div>
+</div>
+
+<!-- Upload Aadhar -->
+<div class="col-md-3 mb-3">
+  <label class="form-label d-block">Upload Aadhar</label>
+  <button type="button"
+          class="form-control btn btn-sm btn-outline-primary"
+          onclick="document.getElementById('aadhar_file').click()">Upload</button>
+  <input type="file" name="aadhar_number_attachment" id="aadhar_file" class="d-none"
+         onchange="document.getElementById('aadhar_status').textContent = '✔️ Aadhar Attached'">
+  <div id="aadhar_status" class="text-success small mt-1"></div>
+</div>
+
+
+</div>
+
+
+
+
+
+<div class="row">
+
+    <!-- Mobile Number (Country Code + Number) -->
+    <div class="col-md-4 mb-3">
+      <label class="form-label">Mobile Number</label>
+      <div class="d-flex">
+        <select class="form-select form-select-sm me-1" name="mobile_country_code" style="max-width: 80px;">
+          {% for code in dropdowns['country_codes'] %}
+            <option value="{{ code }}" {% if prefills and prefills.mobile_country_code == code %}selected{% endif %}>{{ code }}</option>
+          {% endfor %}
+        </select>
+        <input type="text" name="mobile_number" class="form-control form-control-sm"
+               pattern="[0-9]{10}" maxlength="10" minlength="10"
+               title="Enter 10 digit mobile number"
+               value="{{ prefills.mobile_number }}" >
+  <!--             value="{{ prefills['mobile_number'] if prefills and 'mobile_number' in prefills else '' }}" required>-->
+      </div>
+    </div>
+
+    <!-- Email Id -->
+    <div class="col-md-4 mb-3">
+      <label class="form-label">Email Id</label>
+      <input type="email" name="email_id" class="form-control form-control-sm"
+             value="{{ prefills.email_id }}" >
+  <!--           value="{{ prefills['email_id'] if prefills else '' }}" required>-->
+    </div>
+
+
+    <!-- Nationality -->
+    <div class="col-md-2 mb-3">
+      <label class="form-label">Nationality</label>
+      <select class="form-select form-select-sm" name="nationality">
+        {% for option in dropdowns['nationality'] %}
+          <option value="{{ option }}" {% if prefills and prefills.nationality == option %}selected{% endif %}>{{ option }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <!-- Community -->
+    <div class="col-md-2 mb-3">
+      <label class="form-label">Community</label>
+<!--      <select name="community" class="form-select form-select-sm" required>-->
+<!--        <option value="">Select</option>-->
+        <select class="form-select form-select-sm" name="community">
+        {% for opt in dropdowns['community'] %}
+          <option value="{{ opt }}" {% if prefills and prefills['community'] == opt %}selected{% endif %}>{{ opt }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+</div>
+
+
+
+  <div class="col-md-12 mb-3" id="language-container">
+  <label class="form-label">Languages Known</label>
+
+  <div class="row mb-2">
+    <div class="col-md-4">
+      <label class="form-label">Can Read</label>
+      <select name="read_language" class="form-select" multiple>
+        <option value="English">English</option>
+        <option value="Tamil">Tamil</option>
+        <option value="Hindi">Hindi</option>
+      </select>
+    </div>
+
+    <div class="col-md-4">
+      <label class="form-label">Can Write</label>
+      <select name="write_language" class="form-select" multiple>
+        <option value="English">English</option>
+        <option value="Tamil">Tamil</option>
+        <option value="Hindi">Hindi</option>
+      </select>
+    </div>
+
+    <div class="col-md-4">
+      <label class="form-label">Can Speak</label>
+      <select name="speak_language" class="form-select" multiple>
+        <option value="English">English</option>
+        <option value="Tamil">Tamil</option>
+        <option value="Hindi">Hindi</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+  <div class="row">
+    <!-- S/o D/o W/o -->
+    <div class="col-md-3 mb-3">
+      <label class="form-label">S/o D/o W/o</label>
+      <select name="s/o_d/o_w/o" class="form-select">
+        {% for opt in dropdowns['s/o_d/o_w/o'] %}
+          <option value="{{ opt }}" {% if prefills['s/o_d/o_w/o'] == opt %}selected{% endif %}>{{ opt }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <!-- Father Name -->
+    <div class="col-md-3 mb-3">
+      <label class="form-label">Father Name</label>
+      <input type="text" name="father_name" class="form-control" value="{{ prefills.father_name }}">
+    </div>
+
+    <!-- Father Occupation -->
+    <div class="col-md-3 mb-3">
+      <label class="form-label">Father Occupation</label>
+      <input type="text" name="father_occupation" class="form-control" value="{{ prefills.father_occupation }}">
+    </div>
+
+        <!-- Marital Status -->
+    <div class="col-md-3 mb-3">
+      <label class="form-label">Marital Status</label>
+      <select name="marital_status" class="form-select">
+        {% for opt in ['Single', 'Married', 'Divorced', 'Widowed'] %}
+          <option value="{{ opt }}" {% if prefills.marital_status == opt %}selected{% endif %}>{{ opt }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+
+
+
+  </div>
+
+
+
+  <div class="row">
+
+        <!-- Date of Marriage -->
+    <div class="col-md-3 mb-3">
+      <label class="form-label">Date of Marriage</label>
+      <input type="date" name="date_of_marriage" class="form-control" value="{{ prefills.date_of_marriage }}">
+    </div>
+
+    <!-- Spouse Name -->
+    <div class="col-md-3 mb-3">
+      <label class="form-label">Spouse Name</label>
+      <input type="text" name="spouse_name" class="form-control" value="{{ prefills.spouse_name }}">
+    </div>
+
+    <!-- Spouse Occupation -->
+    <div class="col-md-3 mb-3">
+      <label class="form-label">Spouse Occupation</label>
+      <input type="text" name="spouse_occupation" class="form-control" value="{{ prefills.spouse_occupation }}">
+    </div>
+
+        <!-- No of Children -->
+    <div class="col-md-3 mb-3">
+      <label class="form-label">Total No. of Children</label>
+      <input type="text" name="total_no_of_children" class="form-control" value="{{ prefills.total_no_of_children }}">
+    </div>
+
+  </div>
+
+  <div class="row">
+
+      <!-- Telephone No Res -->
+    <div class="col-md-4 mb-3">
+      <label class="form-label">Telephone No Res</label>
+      <input type="text" name="telephone_no_res" class="form-control" value="{{ prefills.telephone_no_res }}">
+    </div>
+
+    <!-- Telephone No Off -->
+    <div class="col-md-4 mb-3">
+      <label class="form-label">Telephone No Off</label>
+      <input type="text" name="telephone_no_off" class="form-control" value="{{ prefills.telephone_no_off }}">
+    </div>
+
+    <!-- Alternate Contact No -->
+    <div class="col-md-4 mb-3">
+      <label class="form-label">Alternative Contact No.</label>
+      <input type="text" name="contact_number_guardian" class="form-control" value="{{ prefills.contact_number_guardian }}">
+    </div>
+  </div>
+
+  <div class="d-flex justify-content-end">
+    <button type="button" class="btn btn-primary" onclick="nextStep()">Next</button>
+  </div>
+</div>
+</div>
+
+
+
+
+
+<!-- Step 1: Experience Section with Accordion -->
+<div class="form-section" data-step="1">
+  <h5>Experience <span id="experienceProgress" class="text-muted small">1/5</span></h5>
+
+  <div class="accordion" id="experience-container">
+    {% for i in range(5) %}
+    <div class="accordion-item experience-wrapper" style="display: {{ 'block' if i == 0 else 'none' }};">
+      <h2 class="accordion-header" id="experienceHeading{{ i }}">
+        <button class="accordion-button {{ 'collapsed' if i != 0 }}" type="button" data-bs-toggle="collapse"
+                data-bs-target="#experienceCollapse{{ i }}" aria-expanded="{{ 'true' if i == 0 else 'false' }}"
+                aria-controls="experienceCollapse{{ i }}">
+          Experience Entry #{{ i + 1 }}
+        </button>
+      </h2>
+      <div id="experienceCollapse{{ i }}" class="accordion-collapse collapse {{ 'show' if i == 0 else '' }}"
+           aria-labelledby="experienceHeading{{ i }}" data-bs-parent="#experience-container">
+        <div class="accordion-body experience-box experience-entry bg-light">
+          <div class="row">
+
+            <!-- Professional / Teaching / Practitioner -->
+            <label class="form-label">Type of Experience</label>
+            <div class="d-flex flex-wrap gap-3 mb-3">
+              {% for type in ['Professional', 'Teaching', 'Practitioner'] %}
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="experience_type_{{ i }}" value="{{ type }}">
+                <label class="form-check-label">{{ type }}</label>
+              </div>
+              {% endfor %}
+            </div>
+
+            <!-- Employment Type -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Employment Type</label>
+              <select name="employment_type" class="form-select">
+                <option value="">-- Select --</option>
+                <option value="Full Time">Full Time</option>
+                <option value="Contract">Contract</option>
+              </select>
+            </div>
+
+            <!-- Previous Experience Address -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Previous Experience Address</label>
+              <input type="text" class="form-control" name="experience_address">
+            </div>
+
+            <!-- Designation -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Designation</label>
+              <input type="text" class="form-control" name="designation">
+            </div>
+
+            <!-- Name Of Institution -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Name Of Institution</label>
+              <input type="text" class="form-control" name="institution_name">
+            </div>
+
+            <!-- From & To Dates -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label">From</label>
+              <input type="date" class="form-control" name="from_date">
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label">To</label>
+              <input type="date" class="form-control" name="to_date">
+            </div>
+
+            <!-- Experience in Years / Months / Days -->
+            <div class="col-md-4 mb-3">
+              <label class="form-label">Exp in Years</label>
+              <input type="text" class="form-control" name="exp_years">
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label">Exp in Months</label>
+              <input type="text" class="form-control" name="exp_months">
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label">Exp in Days</label>
+              <input type="text" class="form-control" name="exp_days">
+            </div>
+
+            <!-- Attachment (Multiple) -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Attachment</label>
+              <input type="file" class="form-control" name="experience_attachments" multiple>
+            </div>
+
+            <!-- Reason for being relieved -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Reason for Being Relieved</label>
+              <input type="text" class="form-control" name="relieve_reason">
+            </div>
+
+            <!-- Relieving Doc -->
+<!--             <div class="col-md-12 mb-3">
+              <label class="form-label">Relieving Doc</label>
+              <input type="text" class="form-control" name="relieving_doc">
+            </div> -->
+
+            <!-- Remove Button -->
+            <div class="col-12 text-end">
+              <button type="button" class="btn btn-sm btn-danger mt-2 remove-experience-btn"
+                      onclick="removeExperience(this)" style="display: {{ 'none' if i == 0 else 'inline-block' }};">
+                × Remove Experience
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="d-flex justify-content-between align-items-center mt-3">
+    <div>
+      <button type="button" class="btn btn-outline-primary btn-sm" id="addExperienceBtn" onclick="showNextExperience()">+ Add Experience</button>
+    </div>
+    <div>
+      <button type="button" class="btn btn-secondary" onclick="prevStep()">Back</button>
+      <button type="button" class="btn btn-primary" onclick="nextStep()">Next</button>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- Step 3: Education Qualification Section -->
+<div class="form-section" data-step="2">
+  <h5>Educational Qualifications <span id="educationProgress" class="text-muted small">1/5</span></h5>
+
+  <div class="accordion" id="education-container">
+    {% for i in range(5) %}
+    <div class="accordion-item education-wrapper" style="display: {{ 'block' if i == 0 else 'none' }};">
+      <h2 class="accordion-header" id="educationHeading{{ i }}">
+        <button class="accordion-button {{ 'collapsed' if i != 0 }}" type="button" data-bs-toggle="collapse"
+                data-bs-target="#educationCollapse{{ i }}" aria-expanded="{{ 'true' if i == 0 else 'false' }}"
+                aria-controls="educationCollapse{{ i }}">
+          Education Entry #{{ i + 1 }}
+        </button>
+      </h2>
+      <div id="educationCollapse{{ i }}" class="accordion-collapse collapse {{ 'show' if i == 0 else '' }}"
+           aria-labelledby="educationHeading{{ i }}" data-bs-parent="#education-container">
+        <div class="accordion-body bg-light education-entry">
+          <div class="row">
+
+            <div class="col-md-6 mb-3">
+              <label class="form-label">MD/MS Subject</label>
+              <input type="text" class="form-control" name="mdms_subject">
+            </div>
+
+            <div class="col-md-6 mb-3">
+              <label class="form-label">DM/MCh Subject</label>
+              <input type="text" class="form-control" name="dmmch_subject">
+            </div>
+
+            <div class="col-md-6 mb-3">
+              <label class="form-label">PhD Subject</label>
+              <input type="text" class="form-control" name="phd_subject">
+            </div>
+
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Qualification</label>
+              <select name="qualification" class="form-select">
+                <option value="">-- Select Qualification --</option>
+                {% for opt in form_config['qualification']['dropdowns']['qualification'] %}
+                  <option value="{{ opt }}">{{ opt }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Specialization</label>
+              <select name="specialization" class="form-select">
+                <option value="">-- Select Specialization --</option>
+                {% for spec in form_config['qualification']['dropdowns']['specialization'] %}
+                  <option value="{{ spec }}">{{ spec }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-md-6 mb-3">
+              <label class="form-label">College</label>
+              <input type="text" name="college" class="form-control" placeholder="Enter College">  
+<!--               <select name="college" class="form-select">
+                <option value="">-- Select College --</option>
+                {% for college in form_config['qualification']['dropdowns']['college'] %}
+                  <option value="{{ college }}">{{ college }}</option>
+                {% endfor %}
+              </select> -->
+            </div>
+
+            <div class="col-md-6 mb-3">
+              <label class="form-label">University</label>
+              <input type="text" name="university" class="form-control" placeholder="Enter University">  
+<!--               <select name="university" class="form-select">
+                <option value="">-- Select University --</option>
+                {% for univ in form_config['qualification']['dropdowns']['university'] %}
+                  <option value="{{ univ }}">{{ univ }}</option>
+                {% endfor %}
+              </select> -->
+            </div>
+
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Degree Passed Out Year</label>
+              <input type="number" class="form-control" name="passed_out_year" placeholder="e.g. 2020">
+            </div>
+
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Registration No</label>
+              <input type="text" class="form-control" name="registration_no">
+            </div>
+
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Registration Date</label>
+              <input type="date" class="form-control" name="registration_date">
+            </div>
+
+            <div class="col-md-6 mb-3">
+              <label class="form-label">State Medical Council</label>
+              <input type="text" name="state_medical_council" class="form-control" placeholder="Enter State Medical Council">
+<!--               <select name="state_medical_council" class="form-select">
+                <option value="">-- Select State --</option>
+                {% for state in form_config['qualification']['dropdowns']['state_medical_council'] %}
+                  <option value="{{ state }}">{{ state }}</option>
+                {% endfor %}
+              </select> -->
+            </div>
+
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Attachment</label>
+              <input type="file" class="form-control" name="education_attachment">
+            </div>
+
+            <!-- Remove Button -->
+            <div class="col-12 text-end">
+              <button type="button" class="btn btn-sm btn-danger mt-2 remove-education-btn"
+                      onclick="removeEducation(this)" style="display: {{ 'none' if i == 0 else 'inline-block' }};">
+                × Remove Education Entry
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Add Education Button -->
+  <div class="d-flex justify-content-between align-items-center mt-3">
+    <div>
+      <button type="button" class="btn btn-outline-primary btn-sm" id="addEducationBtn" onclick="showNextEducation()">+ Add Education</button>
+    </div>
+    <div>
+      <button type="button" class="btn btn-secondary" onclick="prevStep()">Back</button>
+      <button type="button" class="btn btn-primary" onclick="nextStep()">Next</button>
+    </div>
+  </div>
+</div>
+
+
+
+
+<!-- Step X: Proof of Address -->
+<div class="form-section" data-step="3">
+  <h5>Proof of Address <span id="addressProgress" class="text-muted small">1/5</span></h5>
+
+  <div class="accordion" id="address-section">
+    {% for i in range(5) %}
+    <div class="accordion-item address-wrapper" style="display: {{ 'block' if i == 0 else 'none' }};">
+      <h2 class="accordion-header" id="addressHeading{{ i }}">
+        <button class="accordion-button {{ 'collapsed' if i != 0 }}" type="button" data-bs-toggle="collapse"
+                data-bs-target="#addressCollapse{{ i }}" aria-expanded="{{ 'true' if i == 0 else 'false' }}"
+                aria-controls="addressCollapse{{ i }}">
+          Address Entry #{{ i + 1 }}
+        </button>
+      </h2>
+      <div id="addressCollapse{{ i }}" class="accordion-collapse collapse {{ 'show' if i == 0 else '' }}"
+           aria-labelledby="addressHeading{{ i }}" data-bs-parent="#address-section">
+        <div class="accordion-body bg-light border rounded">
+          <div class="row">
+
+            <!-- Present Residential Address -->
+            <div class="col-md-12 mb-2">
+              <h6 class="fw-bold">Present Residential Address</h6>
+            </div>
+
+            <div class="col-md-6 mb-2">
+              <label class="form-label">Address Proof Type</label>
+              <select class="form-select" name="present_address_type">
+                {% for option in form_config['address']['dropdowns']['address_type'] %}
+                  <option value="{{ option }}">{{ option }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            {% set present_fields = ['Address Proof', 'Street', 'Street2', 'City', 'State', 'Zip', 'Country'] %}
+            {% for label in present_fields %}
+            <div class="col-md-6 mb-2">
+              <label class="form-label">{{ label }}</label>
+              <input type="text" class="form-control" name="present_{{ label | lower | replace(' ', '_') }}">
+            </div>
+            {% endfor %}
+
+            <div class="col-md-6 mb-2">
+              <label class="form-label">Attachment</label>
+              <input type="file" class="form-control" name="present_address_attachment">
+            </div>
+
+            <!-- Permanent Residential Address -->
+            <div class="col-md-12 mt-4 mb-2">
+              <h6 class="fw-bold">Permanent Residential Address</h6>
+            </div>
+
+            <div class="col-md-6 mb-2">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="address_same_as_present" id="address_same_as_present">
+                <label class="form-check-label" for="address_same_as_present">Address - Present is Permanent</label>
+              </div>
+            </div>
+
+            <div class="col-md-6 mb-2">
+              <label class="form-label">Address Proof Type</label>
+              <select class="form-select" name="permanent_address_type">
+                {% for option in form_config['address']['dropdowns']['address_type'] %}
+                  <option value="{{ option }}">{{ option }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            {% for label in present_fields %}
+            <div class="col-md-6 mb-2">
+              <label class="form-label">{{ label }}</label>
+              <input type="text" class="form-control" name="permanent_{{ label | lower | replace(' ', '_') }}">
+            </div>
+            {% endfor %}
+
+            <div class="col-md-6 mb-2">
+              <label class="form-label">Attachment</label>
+              <input type="file" class="form-control" name="permanent_address_attachment">
+            </div>
+
+            <!-- Remove Button -->
+            <div class="col-md-12 text-end mt-2">
+              <button type="button" class="btn btn-sm btn-danger remove-address-btn"
+                      onclick="removeAddress(this)"
+                      style="display: {{ 'none' if i == 0 else 'inline-block' }};">
+                × Remove Address Entry
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Add & Nav Buttons -->
+  <div class="d-flex justify-content-between align-items-center mt-3">
+    <button type="button" class="btn btn-outline-primary btn-sm" id="addAddressBtn" onclick="showNextAddress()">+ Add Address</button>
+    <div>
+      <button type="button" class="btn btn-secondary" onclick="prevStep()">Back</button>
+      <button type="button" class="btn btn-primary" onclick="nextStep()">Next</button>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+<!-- Step 4: Academic Activities -->
+<div class="form-section" data-step="4">
+  <h5>Academic Activities <span id="academicProgress" class="text-muted small">1</span></h5>
+
+  <div class="accordion" id="academic-section">
+    <div class="accordion-item academic-wrapper">
+      <h2 class="accordion-header">
+        <button class="accordion-button" type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#academicCollapse1"
+                aria-expanded="true"
+                aria-controls="academicCollapse1">
+          Academic Activity Entry #1
+        </button>
+      </h2>
+      <div id="academicCollapse1" class="accordion-collapse collapse show"
+           aria-labelledby="academicHeading1" data-bs-parent="#academic-section">
+        <div class="accordion-body bg-light border rounded">
+          <div class="row">
+            <!-- Date -->
+            <div class="col-md-4 mb-2">
+              <label class="form-label">Date</label>
+              <input type="date" class="form-control" name="academic_date">
+            </div>
+
+            <!-- Type -->
+            <div class="col-md-4 mb-2">
+              <label class="form-label">Lecture/SGT/SDL/Clinic/Other</label>
+              <input type="text" class="form-control" name="academic_type">
+            </div>
+
+            <!-- Topic -->
+            <div class="col-md-4 mb-2">
+              <label class="form-label">Topic</label>
+              <input type="text" class="form-control" name="academic_topic">
+            </div>
+
+            <!-- Remove Button -->
+            <div class="col-12 text-end">
+              <button type="button" class="btn btn-sm btn-danger mt-2 remove-academic-btn" onclick="removeAcademic(this)" style="display: none;">× Remove</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Buttons -->
+  <div class="d-flex justify-content-between align-items-center mt-3">
+    <button type="button" class="btn btn-outline-success btn-sm" id="addAcademicBtn">+ Add Academic Activity</button>
+    <div>
+      <button type="button" class="btn btn-secondary" onclick="prevStep()">Back</button>
+      <button type="button" class="btn btn-primary" onclick="nextStep()">Next</button>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+<!-- Step 5: Course -->
+<div class="form-section" data-step="5">
+  <h5>Course <span id="courseProgress" class="text-muted small">1</span></h5>
+
+  <div class="accordion" id="course-section">
+    <div class="accordion-item course-wrapper">
+      <h2 class="accordion-header">
+        <button class="accordion-button" type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#courseCollapse1"
+                aria-expanded="true"
+                aria-controls="courseCollapse1">
+          Course Entry #1
+        </button>
+      </h2>
+      <div id="courseCollapse1" class="accordion-collapse collapse show"
+           aria-labelledby="courseHeading1" data-bs-parent="#course-section">
+        <div class="accordion-body bg-light border rounded">
+          <div class="row">
+            <!-- Course -->
+            <div class="col-md-4 mb-2">
+              <label class="form-label">Course</label>
+              <input type="text" class="form-control" name="course_name">
+            </div>
+
+            <!-- Start Date -->
+            <div class="col-md-4 mb-2">
+              <label class="form-label">Course Start Date</label>
+              <input type="date" class="form-control" name="course_start_date">
+            </div>
+
+            <!-- Duration in Months -->
+            <div class="col-md-4 mb-2">
+              <label class="form-label">Duration in Months</label>
+              <input type="text" class="form-control" name="course_duration">
+            </div>
+
+            <!-- Institution -->
+            <div class="col-md-6 mb-2">
+              <label class="form-label">Name of Institution</label>
+              <input type="text" class="form-control" name="course_institution">
+            </div>
+
+            <!-- Attachment -->
+            <div class="col-md-6 mb-2">
+              <label class="form-label">Attachment</label>
+              <input type="file" class="form-control" name="course_attachment">
+            </div>
+
+            <!-- Remove Button -->
+            <div class="col-12 text-end">
+              <button type="button" class="btn btn-sm btn-danger mt-2 remove-course-btn"
+                      onclick="removeCourse(this)" style="display: none;">× Remove</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Buttons -->
+  <div class="d-flex justify-content-between align-items-center mt-3">
+    <button type="button" class="btn btn-outline-success btn-sm" onclick="addCourse()">+ Add Course</button>
+    <div>
+      <button type="button" class="btn btn-secondary" onclick="prevStep()">Back</button>
+      <button type="button" class="btn btn-primary" onclick="nextStep()">Next</button>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+<!-- Step 6: Defense -->
+<div class="form-section" data-step="6">
+  <h5>Indian Defense <span id="defenseProgress" class="text-muted small">1</span></h5>
+
+  <div class="accordion" id="defense-section">
+    <div class="accordion-item defense-wrapper">
+      <h2 class="accordion-header">
+        <button class="accordion-button" type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#defenseCollapse1"
+                aria-expanded="true"
+                aria-controls="defenseCollapse1">
+          Defense Entry #1
+        </button>
+      </h2>
+      <div id="defenseCollapse1" class="accordion-collapse collapse show"
+           aria-labelledby="defenseHeading1" data-bs-parent="#defense-section">
+        <div class="accordion-body bg-light border rounded">
+          <!-- Row 1 -->
+          <div class="row">
+            <div class="col-md-4 mb-2">
+              <label class="form-label">Designation</label>
+              <input type="text" class="form-control" name="defense_designation">
+            </div>
+
+            <div class="col-md-4 mb-2">
+              <label class="form-label">Institution</label>
+              <input type="text" class="form-control" name="defense_institution">
+            </div>
+
+            <div class="col-md-4 mb-2">
+              <label class="form-label">Attachment</label>
+              <input type="file" class="form-control" name="defense_attachment">
+            </div>
+          </div>
+
+          <!-- Row 2 -->
+          <div class="row">
+            <div class="col-md-4 mb-2">
+              <label class="form-label">From Date</label>
+              <input type="date" class="form-control defense-from-date" name="defense_from_date">
+            </div>
+
+            <div class="col-md-4 mb-2">
+              <label class="form-label">To Date</label>
+              <input type="date" class="form-control defense-to-date" name="defense_to_date">
+            </div>
+
+            <div class="col-md-4 mb-2">
+              <label class="form-label text-nowrap">Experience (Years, Months, Days)</label>
+              <input type="text" class="form-control defense-experience" name="defense_experience" readonly>
+            </div>
+          </div>
+
+          <!-- Remove Button -->
+          <div class="col-12 text-end">
+            <button type="button" class="btn btn-sm btn-danger mt-2 remove-defense-btn"
+                    onclick="removeDefense(this)" style="display: none;">× Remove</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Buttons -->
+  <div class="d-flex justify-content-between align-items-center mt-3">
+    <button type="button" class="btn btn-outline-success btn-sm" onclick="addDefense()">+ Add Defense</button>
+    <div>
+      <button type="button" class="btn btn-secondary" onclick="prevStep()">Back</button>
+      <button type="button" class="btn btn-primary" onclick="nextStep()">Next</button>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+<!-- Step 7: MCI/MNC -->
+<div class="form-section" data-step="7">
+  <h5>MCI/MNC</h5>
+
+  <!-- Section A: MCI/NMC Inspection -->
+  <div class="card border-info mb-3">
+    <div class="card-header bg-info text-white fw-semibold">
+      MCI/NMC Inspection (last 3 years)
+    </div>
+    <div class="card-body bg-light border rounded">
+      <div class="row">
+        <div class="col-md-4 mb-3">
+          <label class="form-label">Subject</label>
+          <input type="text" class="form-control" name="mci_subject">
+        </div>
+
+        <div class="col-md-4 mb-3">
+          <label class="form-label">Designation</label>
+          <input type="text" class="form-control" name="mci_designation">
+        </div>
+
+        <div class="col-md-4 mb-3">
+          <label class="form-label">College</label>
+          <input type="text" class="form-control" name="mci_college">
+        </div>
+
+        <div class="col-md-4 mb-3">
+          <label class="form-label">Dates</label>
+          <input type="date" class="form-control" name="mci_dates">
+        </div>
+
+        <div class="col-md-8 mb-3">
+          <label class="form-label">Attachment</label>
+          <input type="file" class="form-control" name="mci_attachment">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section B: MCI/NMC Assessment -->
+  <div class="card border-secondary mb-3">
+    <div class="card-header bg-secondary text-white fw-semibold">
+      MCI/NMC Assessment
+    </div>
+    <div class="card-body bg-light border rounded">
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label class="form-label">UG / PG / Any other</label>
+          <input type="text" class="form-control" name="mci_level">
+        </div>
+
+        <div class="col-md-6 mb-3">
+          <label class="form-label">Name of College</label>
+          <input type="text" class="form-control" name="mci_assess_college">
+        </div>
+
+        <div class="col-md-4 mb-3">
+          <label class="form-label">Appeared & Accepted at Same College</label>
+          <select class="form-select" name="mci_same_college">
+            <option value="">Select</option>
+            <option value="Yes">Yes</option>
+            <option value="No">No</option>
+          </select>
+        </div>
+
+        <div class="col-md-4 mb-3">
+          <label class="form-label">Appeared & Accepted for Same Designation</label>
+          <select class="form-select" name="mci_same_designation">
+            <option value="">Select</option>
+            <option value="Yes">Yes</option>
+            <option value="No">No</option>
+          </select>
+        </div>
+
+        <div class="col-md-4 mb-3">
+          <label class="form-label">Retired from Govt. Medical College</label>
+          <select class="form-select" name="mci_retired_govt">
+            <option value="">Select</option>
+            <option value="Yes">Yes</option>
+            <option value="No">No</option>
+          </select>
+        </div>
+
+        <div class="col-md-6 mb-3">
+          <label class="form-label">Designation at Retirement (if Yes)</label>
+          <input type="text" class="form-control" name="mci_retired_designation">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation Buttons -->
+  <div class="d-flex justify-content-between mt-3">
+    <button type="button" class="btn btn-secondary" onclick="prevStep()">Back</button>
+    <button type="button" class="btn btn-primary" onclick="nextStep()">Next</button>
+  </div>
+</div>
+
+
+
+
+<!-- Step 8: Publication -->
+<div class="form-section" data-step="8">
+  <h5>Publication <span id="publicationProgress" class="text-muted small">1</span></h5>
+
+  <div class="accordion" id="publication-section">
+    <div class="accordion-item publication-wrapper">
+      <h2 class="accordion-header">
+        <button class="accordion-button" type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#publicationCollapse1"
+                aria-expanded="true"
+                aria-controls="publicationCollapse1">
+          Publication Entry #1
+        </button>
+      </h2>
+      <div id="publicationCollapse1" class="accordion-collapse collapse show"
+           aria-labelledby="publicationHeading1" data-bs-parent="#publication-section">
+        <div class="accordion-body bg-light border rounded">
+          <div class="row">
+
+            <!-- Row 1 -->
+            <div class="col-md-4 mb-2">
+              <label class="form-label">Title Of the Publication</label>
+              <input type="text" class="form-control" name="publication_title">
+            </div>
+
+            <div class="col-md-4 mb-2">
+              <label class="form-label">Name Of Journal</label>
+              <input type="text" class="form-control" name="publication_journal">
+            </div>
+
+            <div class="col-md-4 mb-2">
+              <label class="form-label">Research Type</label>
+              <input type="text" class="form-control" name="publication_type">
+            </div>
+
+            <!-- Row 2 -->
+            <div class="col-md-4 mb-2">
+              <label class="form-label">No Of Books</label>
+              <input type="text" class="form-control" name="publication_books">
+            </div>
+
+            <div class="col-md-4 mb-2">
+              <label class="form-label">No Of Chapters in Book</label>
+              <input type="text" class="form-control" name="publication_chapters">
+            </div>
+
+            <div class="col-md-4 mb-2">
+              <label class="form-label">Authorship Details</label>
+              <input type="text" class="form-control" name="publication_authorship">
+            </div>
+
+            <!-- Row 3 -->
+            <div class="col-md-4 mb-2">
+              <label class="form-label">Date Of Publication</label>
+              <input type="date" class="form-control" name="publication_date">
+            </div>
+
+            <div class="col-md-4 mb-2">
+              <label class="form-label">Index Agency</label>
+              <input type="text" class="form-control" name="publication_agency">
+            </div>
+
+            <div class="col-md-4 mb-2">
+              <label class="form-label">Attachment</label>
+              <input type="file" class="form-control" name="publication_attachment">
+            </div>
+
+            <!-- Remove Button -->
+            <div class="col-12 text-end">
+              <button type="button" class="btn btn-sm btn-danger mt-2 remove-publication-btn"
+                      onclick="removePublication(this)" style="display: none;">× Remove</button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add + Nav Buttons -->
+  <div class="d-flex justify-content-between align-items-center mt-3">
+    <button type="button" class="btn btn-outline-success btn-sm" onclick="addPublication()">+ Add Publication</button>
+    <div>
+      <button type="button" class="btn btn-secondary" onclick="prevStep()">Back</button>
+      <button type="button" class="btn btn-primary" onclick="nextStep()">Next</button>
+    </div>
+  </div>
+</div>
+
+
+
+
+<!-- Step 9: Research Projects -->
+<div class="form-section" data-step="9">
+  <h5>Research Projects <span id="researchProjectProgress" class="text-muted small">1</span></h5>
+
+  <div class="accordion" id="researchProjectContainer">
+    <div class="accordion-item research-project-wrapper">
+      <h2 class="accordion-header">
+        <button class="accordion-button" type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#researchProjectCollapse1"
+                aria-expanded="true"
+                aria-controls="researchProjectCollapse1">
+          Research Project Entry #1
+        </button>
+      </h2>
+      <div id="researchProjectCollapse1" class="accordion-collapse collapse show"
+           aria-labelledby="researchProjectHeading1" data-bs-parent="#researchProjectContainer">
+        <div class="accordion-body bg-light border rounded">
+          <div class="row">
+
+            <!-- Project Title -->
+            <div class="col-md-6 mb-2">
+              <label class="form-label">Name Of Research Project</label>
+              <input type="text" class="form-control" name="research_project_title">
+            </div>
+
+            <!-- Supporting Body -->
+            <div class="col-md-6 mb-2">
+              <label class="form-label">Supporting National Research Body (ICMR/DST/DBT etc.)</label>
+              <input type="text" class="form-control" name="research_supporting_body">
+            </div>
+
+            <!-- Principal -->
+            <div class="col-md-6 mb-2">
+              <label class="form-label">Principal</label>
+              <input type="text" class="form-control" name="research_principal">
+            </div>
+
+            <!-- Co-Principal -->
+            <div class="col-md-6 mb-2">
+              <label class="form-label">Co-Principal</label>
+              <input type="text" class="form-control" name="research_co_principal">
+            </div>
+
+            <!-- Type of Journal -->
+            <div class="col-md-6 mb-2">
+              <label class="form-label">Type of Journals</label>
+              <select class="form-select" name="research_journal_type">
+                {% for option in form_config['research']['dropdowns']['research_journal_type'] %}
+                  <option value="{{ option }}" {% if prefills.research_journal_type == option %}selected{% endif %}>
+                    {{ option }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <!-- Attachment -->
+            <div class="col-md-6 mb-2">
+              <label class="form-label">Attachment</label>
+              <input type="file" class="form-control" name="research_attachment">
+            </div>
+
+            <!-- Remove Button -->
+            <div class="col-12 text-end">
+              <button type="button" class="btn btn-sm btn-danger mt-2 remove-research-project-btn" onclick="removeResearchProjectRow(this)" style="display: none;">× Remove</button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Buttons -->
+  <div class="d-flex justify-content-between align-items-center mt-3">
+    <button type="button" class="btn btn-outline-success btn-sm" onclick="addResearchProject()">+ Add Project</button>
+    <div>
+      <button type="button" class="btn btn-secondary" onclick="prevStep()">Back</button>
+      <button type="button" class="btn btn-primary" onclick="nextStep()">Next</button>
+    </div>
+  </div>
+</div>
+
+
+
+
+<!-- Step 10: Salary -->
+<div class="form-section" data-step="10">
+  <h5>Salary <span id="salaryProgress" class="text-muted small">1</span></h5>
+
+  <div class="card border-primary mb-3">
+    <div class="card-body bg-light rounded p-3" id="salary-section">
+
+      <!-- Salary Entry Template -->
+      <div class="salary-wrapper">
+        <div class="row mb-3">
+          <!-- Month Picker -->
+          <div class="col-md-3 mb-2">
+            <label class="form-label">Month</label>
+            <select class="form-select" name="salary_month">
+              <option value="">-- Select Month --</option>
+              {% for m in range(1, 13) %}
+                <option value="{{ m }}">{{ "{:02d}".format(m) }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Year Picker -->
+          <div class="col-md-3 mb-2">
+            <label class="form-label">Year</label>
+            <input type="number" class="form-control" name="salary_year" min="1900" max="2099" value="{{ datetime.utcnow().year }}">
+          </div>
+
+          <!-- Amount -->
+          <div class="col-md-3 mb-2">
+            <label class="form-label">Amount Received</label>
+            <input type="text" class="form-control" name="amount_received">
+          </div>
+
+          <!-- TDS -->
+          <div class="col-md-2 mb-2">
+            <label class="form-label">TDS</label>
+            <input type="text" class="form-control" name="tds">
+          </div>
+
+          <!-- Remove Button -->
+          <div class="col-md-1 d-flex align-items-end">
+            <button type="button" class="btn btn-sm btn-danger mt-2 remove-salary-btn" onclick="removeSalaryRow(this)" style="display: none;">×</button>
+          </div>
+        </div>
+      </div> <!-- End .salary-wrapper -->
+
+    </div>
+  </div>
+
+  <!-- Add Salary Row Button -->
+  <div class="text-end mb-3">
+    <button type="button" class="btn btn-outline-success btn-sm" onclick="addSalaryRow()">+ Add Salary</button>
+  </div>
+
+  <!-- Navigation Buttons -->
+  <div class="d-flex justify-content-between">
+    <button type="button" class="btn btn-secondary" onclick="prevStep()">Back</button>
+    <button type="button" class="btn btn-primary" onclick="nextStep()">Next</button>
+  </div>
+</div>
+
+
+
+
+  <!-- Step 11: Current Appointment (Present Designation) -->
+  <div class="form-section" data-step="11">
+    <h5>Current Appointment</h5>
+
+    <div class="card border-primary mb-3">
+      <div class="card-body bg-light rounded p-3 id="current-appointment-section">
+
+        <!-- Appointment Row -->
+        <div class="row g-3">
+<!--        <div class="row mb-3 appointment-row rounded border bg-light">-->
+          <!-- Appointment Order -->
+          <div class="col-md-3 mb-2">
+            <label class="form-label">Appointment Order</label>
+            <select name="appointment_order" class="form-select">
+              <option value="">-- Select --</option>
+              <option value="Yes">Yes</option>
+              <option value="No">No</option>
+            </select>
+          </div>
+
+          <!-- Department -->
+          <div class="col-md-3 mb-2">
+            <label class="form-label">Department</label>
+            <select name="department" class="form-select">
+              {% for dept in form_config['current_appointment']['dropdowns']['department'] %}
+              <option value="{{ dept }}">{{ dept }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Present Designation -->
+          <div class="col-md-3 mb-2">
+            <label class="form-label">Present Designation</label>
+            <select name="present_designation" class="form-select">
+              {% for desig in form_config['current_appointment']['dropdowns']['present_designation'] %}
+              <option value="{{ desig }}">{{ desig }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- College/Institute -->
+          <div class="col-md-3 mb-2">
+            <label class="form-label">College/Institute</label>
+            <select name="college_institute" class="form-select">
+              {% for col in form_config['current_appointment']['dropdowns']['college_institute'] %}
+              <option value="{{ col }}">{{ col }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- City -->
+          <div class="col-md-3 mb-2">
+            <label class="form-label">City</label>
+            <input type="text" name="city" class="form-control" placeholder="Enter City">
+<!--             <select name="city" class="form-select">
+              {% for city in form_config['current_appointment']['dropdowns']['city'] %}
+              <option value="{{ city }}">{{ city }}</option>
+              {% endfor %}
+            </select> -->
+          </div>
+
+          <!-- District -->
+          <div class="col-md-3 mb-2">
+            <label class="form-label">District</label>
+            <input type="text" name="district" class="form-control" placeholder="Enter District">
+<!--             <select name="district" class="form-select">
+              {% for dist in form_config['current_appointment']['dropdowns']['district'] %}
+              <option value="{{ dist }}">{{ dist }}</option>
+              {% endfor %}
+            </select> -->
+          </div>
+
+          <!-- Appointment Type -->
+          <div class="col-md-3 mb-2">
+            <label class="form-label">Appointment Type</label>
+            <select name="appointment_type" class="form-select">
+              <option value="">-- Select --</option>
+              {% for option in form_config['current_appointment']['dropdowns']['appointment_type'] %}
+              <option value="{{ option }}">{{ option }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Date of Joining -->
+          <div class="col-md-3 mb-2">
+            <label class="form-label">Date of Joining</label>
+            <input type="date" class="form-control" name="date_of_joining">
+          </div>
+
+          <!-- Current CTC -->
+          <div class="col-md-3 mb-2">
+            <label class="form-label">Current CTC</label>
+            <input type="text" class="form-control" name="current_ctc">
+          </div>
+
+          <!-- Joining Report -->
+          <div class="col-md-3 mb-2">
+            <label class="form-label">Joining Report</label>
+            <select name="joining_report" class="form-select">
+              <option value="">-- Select --</option>
+              <option value="Yes">Yes</option>
+              <option value="No">No</option>
+            </select>
+          </div>
+
+          <!-- Working Hours -->
+          <div class="col-md-3 mb-2">
+            <label class="form-label">Working Hours</label>
+            <input type="text" name="working_hours" class="form-control" placeholder="Enter Working Hours">
+<!--             <select name="working_hours" class="form-select">
+              <option value="">-- Select --</option>
+              {% for time in form_config['current_appointment']['dropdowns']['working_hours'] %}
+              <option value="{{ time }}">{{ time }}</option>
+              {% endfor %}
+            </select> -->
+          </div>
+
+          <!-- Attachment -->
+          <div class="col-md-6 mb-2">
+            <label class="form-label">Attachment</label>
+            <input type="file" class="form-control" name="current_appointment_attachment">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation -->
+    <div class="d-flex justify-content-between">
+      <button type="button" class="btn btn-secondary" onclick="prevStep()">Back</button>
+      <button type="button" class="btn btn-primary" onclick="nextStep()">Next</button>
+    </div>
+  </div>
+
+
+
+    <!-- Step 12: Other Activities -->
+    <div class="form-section" data-step="12">
+      <h5>Other Activities</h5>
+
+      <div class="card border-primary mb-3">
+        <div class="card-body bg-light rounded p-3">
+          <div class="row">
+
+            <!-- Any other info / achievements / patents -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Other information/achievements/patents</label>
+              <input type="text" class="form-control" name="other_info">
+            </div>
+
+            <!-- Awards / Prize -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label">Awards / Prize</label>
+              <input type="text" class="form-control" name="awards">
+            </div>
+
+            <!-- Computer Knowledge -->
+            <div class="col-md-6 mb-3">
+              <div class="form-check mt-4">
+                <input class="form-check-input" type="checkbox" name="computer_knowledge" id="computer_knowledge">
+                <label class="form-check-label" for="computer_knowledge">Computer Knowledge</label>
+              </div>
+            </div>
+
+            <!-- Header -->
+            <div class="col-12 mt-3">
+              <h6 class="text-primary fw-bold">Presentation</h6>
+            </div>
+
+            <!-- Presentation Type -->
+            <div class="col-md-4 mb-3">
+              <label class="form-label">Presentation Type</label>
+              <select class="form-select" name="presentation_type">
+                <option value="">-- Select --</option>
+                {% for option in form_config['other_activities']['dropdowns']['presentation_type'] %}
+                  <option value="{{ option }}" {% if prefills.presentation_type == option %}selected{% endif %}>{{ option }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <!-- Conference Type -->
+            <div class="col-md-4 mb-3">
+              <label class="form-label">Conference Type</label>
+              <select class="form-select" name="conference_type">
+                <option value="">-- Select --</option>
+                {% for option in form_config['other_activities']['dropdowns']['conference_type'] %}
+                  <option value="{{ option }}" {% if prefills.conference_type == option %}selected{% endif %}>{{ option }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+
+            <!-- Details -->
+            <div class="col-md-4 mb-3">
+              <label class="form-label">Details</label>
+              <input type="text" class="form-control" name="presentation_details">
+            </div>
+
+            <!-- MET Header -->
+            <div class="col-12 mt-3">
+              <h6 class="text-primary fw-bold">MET Training</h6>
+            </div>
+
+            <!-- At MCI/NMC Regional MET Centre -->
+            <div class="col-md-4 mb-3">
+              <label class="form-label">At MCI/NMC Regional MET Centre</label>
+              <select class="form-select" name="met_regional_centre">
+                <option value="">-- Select --</option>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+              </select>
+            </div>
+
+            <!-- At your college under Regional Centre observership -->
+            <div class="col-md-4 mb-3">
+              <label class="form-label">At your college under Regional Centre observership</label>
+              <select class="form-select" name="met_college_observership">
+                <option value="">-- Select --</option>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+              </select>
+            </div>
+
+            <!-- Attachment -->
+            <div class="col-md-4 mb-3">
+              <label class="form-label">Any other MET Certificates may be attached</label>
+              <input type="file" class="form-control" name="met_certificate_attachment">
+            </div>
+          </div>
+        </div>
+      </div>
+
+        <!-- Navigation -->
+        <div class="d-flex justify-content-between">
+          <button type="button" class="btn btn-secondary" onclick="prevStep()">Back</button>
+          <button type="button" class="btn btn-primary" onclick="nextStep()">Next</button>
+        </div>
+    </div>
+
+
+
+
+
+
+        <!-- Step 13: Review & Submit -->
+        <div class="form-section" data-step="13">
+            <h5>Review & Submit</h5>
+            <p>Please review your details before submitting.</p>
+
+            <!-- Success Banner -->
+            <div id="successAlert" class="alert alert-success d-none" role="alert">
+              🎉 Your form was submitted successfully!
+            </div>
+
+            <!-- Duplicate Banner -->
+            <div id="duplicateAlert" class="alert alert-danger d-none" role="alert">
+              ⚠️ A user with this ID and name already exists. Please correct the information and submit again.
+            </div>
+
+            <div id="review-summary" class="border p-3 bg-light mb-4"></div>
+
+            <div class="d-flex justify-content-between">
+                <button type="button" class="btn btn-secondary" onclick="prevStep()">Back</button>
+                <button type="submit" class="btn btn-success">Submit</button>
+            </div>
+        </div>
+
+
+    </form>
+</div>
+{% endblock %}
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+{% include 'partials/upload_modal.html' %}
+
+{% block extra_scripts %}
+{% include 'partials/upload_script.html' %}
+<script>
+function autoFillFormFromFile() {
+  const fileInput = document.getElementById('biodataFile');
+  const file = fileInput.files[0];
+
+  if (!file) {
+    alert("Please upload a CSV or XLSX file first.");
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  fetch("/autofill-biodata", {
+    method: "POST",
+    body: formData
+  })
+    .then(response => response.json())
+    .then(data => {
+      if (data.status === 'success') {
+        for (const [field, value] of Object.entries(data.values)) {
+          const inputs = document.getElementsByName(field);
+          if (inputs.length > 0) {
+            const input = inputs[0]; // use only the first (0th) input
+            if (input.type === 'checkbox') {
+              input.checked = value === true || value === 'true';
+            } else {
+              input.value = value;
+            }
+          }
+        }
+        alert("Form auto-filled. Please review each section before submission.");
+      } else {
+        alert("Auto-fill failed: " + (data.message || 'Unknown error.'));
+      }
+    })
+    .catch(error => {
+      console.error("Error:", error);
+      alert("Failed to auto-fill. Please try again or check file format.");
+    });
+}
+
+
+
+
+
+    let currentStep = 0;
+    const steps = document.querySelectorAll(".form-section");
+    const indicators = document.querySelectorAll(".step");
+
+    function updateSteps() {
+        steps.forEach((step, idx) => {
+            step.classList.toggle("active", idx === currentStep);
+            indicators[idx].classList.toggle("active", idx === currentStep);
+        });
+    }
+
+        function nextStep() {
+        // Step 0 validation for "User id" and "name"
+        if (currentStep === 0) {
+            const userIdInput = document.querySelector('input[name="user_id"]');
+            const nameInput = document.querySelector('input[name="name_(as_in_degree_certificate)"]');
+
+            if (!userIdInput || userIdInput.value.trim() === '') {
+                alert('Please enter your User id before proceeding.');
+                userIdInput.focus();
+                return;
+            }
+
+            if (!nameInput || nameInput.value.trim() === '') {
+                alert('Please enter your Name (As in Degree Certificate) before proceeding.');
+                nameInput.focus();
+                return;
+            }
+        }
+
+        if (currentStep < steps.length - 1) {
+            currentStep++;
+            updateSteps();
+
+            if (currentStep === steps.length - 1) {
+                populateReviewSummary(); // ← This builds preview
+            }
+
+        }
+    }
+
+
+
+
+    function prevStep() {
+        if (currentStep > 0) {
+            currentStep--;
+            updateSteps();
+        }
+    }
+
+    // Set initial counter state for steps
+    document.addEventListener("DOMContentLoaded", function() {
+        document.querySelector(".form-steps").style.counterReset = "step";
+        updateSteps();
+    });
+
+
+
+// Personal details
+// Personal details
+function calculateAge(dob) {
+  const birth = new Date(dob);
+  const today = new Date();
+  let age = today.getFullYear() - birth.getFullYear();
+  const m = today.getMonth() - birth.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
+    age--;
+  }
+  document.getElementById('ageField').value = age;
+}
+
+
+
+function previewPhoto(event) {
+  const file = event.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      const img = document.createElement('img');
+      img.src = e.target.result;
+      img.className = "img-fluid h-100 w-100 object-fit-contain";
+      const previewDiv = document.getElementById("photoPreview");
+      previewDiv.innerHTML = '';
+      previewDiv.appendChild(img);
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
+<!--function previewPhoto(event) {-->
+<!--    const fileInput = event.target;-->
+<!--    const preview = document.getElementById('photoPreview');-->
+
+<!--    if (fileInput.files && fileInput.files[0]) {-->
+<!--      const reader = new FileReader();-->
+
+<!--      reader.onload = function(e) {-->
+<!--        // Clear existing content-->
+<!--        preview.innerHTML = '';-->
+
+<!--        // Create image element-->
+<!--        const img = document.createElement('img');-->
+<!--        img.src = e.target.result;-->
+<!--        img.className = 'img-fluid h-100 w-100 object-fit-contain';-->
+
+<!--        preview.appendChild(img);-->
+<!--      };-->
+
+<!--      reader.readAsDataURL(fileInput.files[0]);-->
+<!--    }-->
+<!--  }-->
+
+
+
+// Experience
+
+
+let visibleCount = 1;
+
+function showNextExperience() {
+  if (visibleCount >= 5) return;
+
+  const nextWrapper = document.querySelector(`#experienceCollapse${visibleCount}`);
+  if (nextWrapper) {
+    // Collapse all others
+    for (let i = 0; i < 5; i++) {
+      const collapse = document.querySelector(`#experienceCollapse${i}`);
+      if (collapse) collapse.classList.remove('show');
+    }
+
+    // Show wrapper
+    const wrapper = document.querySelector(`#experienceHeading${visibleCount}`)?.closest('.experience-wrapper');
+    if (wrapper) wrapper.style.display = 'block';
+
+    nextWrapper.classList.add('show');
+    nextWrapper.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    visibleCount++;
+    updateExperienceUI();
+
+    setupAutoCalculateExperienceDays();
+  }
+}
+
+function removeExperience(btn) {
+  const wrapper = btn.closest('.experience-wrapper');
+  if (!wrapper) return;
+
+  wrapper.style.display = 'none';
+
+  // Collapse all
+  for (let i = 0; i < 5; i++) {
+    document.querySelector(`#experienceCollapse${i}`)?.classList.remove('show');
+  }
+
+  // Expand first visible
+  for (let i = 0; i < 5; i++) {
+    const visibleWrapper = document.querySelector(`#experienceCollapse${i}`);
+    if (document.querySelector(`#experienceHeading${i}`)?.closest('.experience-wrapper')?.style.display !== 'none') {
+      visibleWrapper?.classList.add('show');
+      break;
+    }
+  }
+
+  visibleCount = document.querySelectorAll('.experience-wrapper').length - document.querySelectorAll('.experience-wrapper[style*="display: none"]').length;
+  updateExperienceUI();
+}
+
+function updateExperienceUI() {
+  const addBtn = document.getElementById('addExperienceBtn');
+  const progress = document.getElementById('experienceProgress');
+  if (addBtn) addBtn.disabled = visibleCount >= 5;
+  if (progress) progress.innerText = `${visibleCount}/5`;
+}
+
+                                                    function setupAutoCalculateExperienceDays() {
+  document.querySelectorAll('.experience-wrapper').forEach(wrapper => {
+    const fromInput = wrapper.querySelector('input[name="from_date"]');
+    const toInput = wrapper.querySelector('input[name="to_date"]');
+    const yearsInput = wrapper.querySelector('input[name="exp_years"]');
+    const monthsInput = wrapper.querySelector('input[name="exp_months"]');
+    const daysInput = wrapper.querySelector('input[name="exp_days"]');
+
+    if (fromInput && toInput && yearsInput && monthsInput && daysInput) {
+      const calculateDifference = () => {
+        const fromDate = new Date(fromInput.value);
+        const toDate = new Date(toInput.value);
+
+        if (!isNaN(fromDate) && !isNaN(toDate) && toDate >= fromDate) {
+          let years = toDate.getFullYear() - fromDate.getFullYear();
+          let months = toDate.getMonth() - fromDate.getMonth();
+          let days = toDate.getDate() - fromDate.getDate();
+
+          if (days < 0) {
+            months--;
+            const tempDate = new Date(toDate.getFullYear(), toDate.getMonth(), 0);
+            days += tempDate.getDate(); // Add days in previous month
+          }
+
+          if (months < 0) {
+            years--;
+            months += 12;
+          }
+
+          yearsInput.value = years;
+          monthsInput.value = months;
+          daysInput.value = days;
+        } else {
+          yearsInput.value = '';
+          monthsInput.value = '';
+          daysInput.value = '';
+        }
+      };
+
+      fromInput.addEventListener('change', calculateDifference);
+      toInput.addEventListener('change', calculateDifference);
+    }
+  });
+}
+
+
+
+document.addEventListener('DOMContentLoaded', function () {
+  setupAutoCalculateExperienceDays();
+});
+
+
+
+
+// Educational qualification
+let currentEducationIndex = 1;
+
+function showNextEducation() {
+  if (currentEducationIndex >= 5) return;
+
+  const nextWrapper = document.querySelectorAll('.education-wrapper')[currentEducationIndex];
+  if (nextWrapper) {
+    nextWrapper.style.display = 'block';
+    currentEducationIndex++;
+    document.getElementById('educationProgress').innerText = `${currentEducationIndex}/5`;
+  }
+}
+
+function removeEducation(btn) {
+  const wrapper = btn.closest('.education-wrapper');
+  if (wrapper) {
+    wrapper.style.display = 'none';
+    wrapper.querySelectorAll('input, select').forEach(el => el.value = '');
+    currentEducationIndex = Math.max(currentEducationIndex - 1, 1);
+    document.getElementById('educationProgress').innerText = `${currentEducationIndex}/5`;
+  }
+}
+
+
+
+
+
+// Proof of Address
+document.addEventListener('DOMContentLoaded', function () {
+  const container = document.getElementById('address-section');
+
+  function bindAutoFill(addressWrapper) {
+    const checkbox = addressWrapper.querySelector('input[name="address_same_as_present"]');
+    if (!checkbox) return;
+
+    const fields = ['address_proof', 'street', 'street2', 'city', 'state', 'zip', 'country'];
+
+    checkbox.addEventListener('change', function () {
+      fields.forEach(field => {
+        const presentInput = addressWrapper.querySelector(`[name="present_${field}"]`);
+        const permanentInput = addressWrapper.querySelector(`[name="permanent_${field}"]`);
+
+        if (checkbox.checked) {
+          if (presentInput && permanentInput) {
+            permanentInput.value = presentInput.value;
+            permanentInput.readOnly = true;
+
+            // Keep syncing if present field changes
+            presentInput.addEventListener('input', () => {
+              if (checkbox.checked) permanentInput.value = presentInput.value;
+            });
+          }
+        } else {
+          if (permanentInput) {
+            permanentInput.readOnly = false;
+            permanentInput.value = '';
+          }
+        }
+      });
+    });
+  }
+
+  // Initial binding for existing address entries
+  container.querySelectorAll('.address-wrapper').forEach(bindAutoFill);
+
+  // Support for dynamically added address blocks
+  const addBtn = document.getElementById('addAddressBtn');
+  if (addBtn) {
+    addBtn.addEventListener('click', function () {
+      // Wait a tick to let new entry appear
+      setTimeout(() => {
+        const wrappers = container.querySelectorAll('.address-wrapper');
+        const lastWrapper = wrappers[wrappers.length - 1];
+        bindAutoFill(lastWrapper);
+      }, 100);
+    });
+  }
+});
+
+
+
+
+// Acadamic Section
+document.addEventListener('DOMContentLoaded', function () {
+  const container = document.getElementById('academic-section');
+
+  function bindRemoveButton(wrapper) {
+    const removeBtn = wrapper.querySelector('.remove-academic-btn');
+    if (!removeBtn) return;
+
+    removeBtn.addEventListener('click', function () {
+      wrapper.remove();
+      updateAcademicLabels();
+    });
+  }
+
+  function updateAcademicLabels() {
+    const wrappers = container.querySelectorAll('.academic-wrapper');
+    wrappers.forEach((wrapper, index) => {
+      const headerBtn = wrapper.querySelector('.accordion-button');
+      if (headerBtn) headerBtn.innerText = `Academic Activity Entry #${index + 1}`;
+    });
+
+    const counter = document.getElementById('academicProgress');
+    if (counter) counter.innerText = wrappers.length;
+  }
+
+  const addBtn = document.querySelector('#addAcademicBtn');
+  if (addBtn) {
+    addBtn.addEventListener('click', function () {
+      const wrappers = container.querySelectorAll('.academic-wrapper');
+      const last = wrappers[wrappers.length - 1];
+      const clone = last.cloneNode(true);
+
+      // Clear all input values
+      const inputs = clone.querySelectorAll('input');
+      inputs.forEach(input => {
+        if (input.type === 'checkbox' || input.type === 'radio') {
+          input.checked = false;
+        } else {
+          input.value = '';
+        }
+      });
+
+      // Collapse behavior
+      const collapseId = `academicCollapse${Date.now()}`;
+      const headingId = `academicHeading${Date.now()}`;
+      const accordionBtn = clone.querySelector('.accordion-button');
+      const accordionCollapse = clone.querySelector('.accordion-collapse');
+
+      if (accordionBtn && accordionCollapse) {
+        accordionBtn.classList.add('collapsed');
+        accordionBtn.setAttribute('data-bs-target', `#${collapseId}`);
+        accordionBtn.setAttribute('aria-controls', collapseId);
+
+        accordionCollapse.classList.remove('show');
+        accordionCollapse.id = collapseId;
+        accordionCollapse.setAttribute('aria-labelledby', headingId);
+      }
+
+      clone.querySelector('.remove-academic-btn').style.display = 'inline-block';
+
+      container.appendChild(clone);
+      bindRemoveButton(clone);
+      updateAcademicLabels();
+    });
+  }
+
+  // Initial binding
+  container.querySelectorAll('.academic-wrapper').forEach(wrapper => {
+    bindRemoveButton(wrapper);
+  });
+
+  updateAcademicLabels();
+});
+
+
+
+// Course
+document.addEventListener('DOMContentLoaded', function () {
+  const courseSection = document.getElementById('course-section');
+  const progress = document.getElementById('courseProgress');
+
+  function updateCourseProgress() {
+    const wrappers = courseSection.querySelectorAll('.course-wrapper');
+    progress.textContent = wrappers.length;
+  }
+
+  window.addCourse = function () {
+    const wrappers = courseSection.querySelectorAll('.course-wrapper');
+    const last = wrappers[wrappers.length - 1];
+    const clone = last.cloneNode(true);
+
+    // Reset inputs
+    clone.querySelectorAll('input, select').forEach(el => {
+      el.value = '';
+      if (el.type === 'checkbox') el.checked = false;
+    });
+
+    // Update collapse IDs
+    const newIndex = wrappers.length + 1;
+    const header = clone.querySelector('.accordion-button');
+    const collapse = clone.querySelector('.accordion-collapse');
+    const btn = clone.querySelector('.remove-course-btn');
+
+    const newId = `courseCollapse${newIndex}`;
+    header.textContent = `Course Entry #${newIndex}`;
+    header.setAttribute('data-bs-target', `#${newId}`);
+    header.setAttribute('aria-controls', newId);
+
+    collapse.id = newId;
+    collapse.classList.remove('show');
+
+    // Show remove button
+    if (btn) btn.style.display = 'inline-block';
+
+    courseSection.appendChild(clone);
+    updateCourseProgress();
+  };
+
+  window.removeCourse = function (btn) {
+    const wrapper = btn.closest('.course-wrapper');
+    if (wrapper) wrapper.remove();
+    updateCourseProgress();
+  };
+});
+
+
+
+// Indian defense
+document.addEventListener('DOMContentLoaded', function () {
+  const container = document.getElementById('defense-section');
+
+  function bindRemoveAndDateEvents(wrapper) {
+    const removeBtn = wrapper.querySelector('.remove-defense-btn');
+    if (removeBtn) {
+      removeBtn.addEventListener('click', function () {
+        wrapper.remove();
+        updateDefenseLabels();
+      });
+    }
+
+    const fromInput = wrapper.querySelector('.defense-from-date');
+    const toInput = wrapper.querySelector('.defense-to-date');
+    const expInput = wrapper.querySelector('.defense-experience');
+
+    function updateExperience() {
+      if (!fromInput.value || !toInput.value) return;
+
+      const fromDate = new Date(fromInput.value);
+      const toDate = new Date(toInput.value);
+
+      if (isNaN(fromDate) || isNaN(toDate) || toDate < fromDate) {
+        expInput.value = '';
+        return;
+      }
+
+      let years = toDate.getFullYear() - fromDate.getFullYear();
+      let months = toDate.getMonth() - fromDate.getMonth();
+      let days = toDate.getDate() - fromDate.getDate();
+
+      if (days < 0) {
+        months--;
+        days += new Date(toDate.getFullYear(), toDate.getMonth(), 0).getDate(); // days in previous month
+      }
+
+      if (months < 0) {
+        years--;
+        months += 12;
+      }
+
+      expInput.value = `${years} Years, ${months} Months, ${days} Days`;
+    }
+
+    if (fromInput && toInput && expInput) {
+      fromInput.addEventListener('change', updateExperience);
+      toInput.addEventListener('change', updateExperience);
+    }
+  }
+
+  function updateDefenseLabels() {
+    const wrappers = container.querySelectorAll('.defense-wrapper');
+    wrappers.forEach((wrapper, index) => {
+      const headerBtn = wrapper.querySelector('.accordion-button');
+      if (headerBtn) headerBtn.innerText = `Defense Entry #${index + 1}`;
+    });
+
+    const counter = document.getElementById('defenseProgress');
+    if (counter) counter.innerText = wrappers.length;
+  }
+
+  window.addDefense = function () {
+    const wrappers = container.querySelectorAll('.defense-wrapper');
+    const last = wrappers[wrappers.length - 1];
+    const clone = last.cloneNode(true);
+
+    // Clear inputs
+    const inputs = clone.querySelectorAll('input');
+    inputs.forEach(input => {
+      if (input.type === 'checkbox' || input.type === 'radio') {
+        input.checked = false;
+      } else {
+        input.value = '';
+      }
+    });
+
+    // Collapse ID updates
+    const collapseId = `defenseCollapse${Date.now()}`;
+    const headingId = `defenseHeading${Date.now()}`;
+    const accordionBtn = clone.querySelector('.accordion-button');
+    const accordionCollapse = clone.querySelector('.accordion-collapse');
+
+    if (accordionBtn && accordionCollapse) {
+      accordionBtn.classList.add('collapsed');
+      accordionBtn.setAttribute('data-bs-target', `#${collapseId}`);
+      accordionBtn.setAttribute('aria-controls', collapseId);
+
+      accordionCollapse.classList.remove('show');
+      accordionCollapse.id = collapseId;
+      accordionCollapse.setAttribute('aria-labelledby', headingId);
+    }
+
+    // Show remove button
+    clone.querySelector('.remove-defense-btn').style.display = 'inline-block';
+
+    container.appendChild(clone);
+    bindRemoveAndDateEvents(clone);
+    updateDefenseLabels();
+  };
+
+  // Initial setup
+  container.querySelectorAll('.defense-wrapper').forEach(wrapper => {
+    bindRemoveAndDateEvents(wrapper);
+  });
+
+  updateDefenseLabels();
+});
+
+
+
+// Publication
+document.addEventListener('DOMContentLoaded', function () {
+  const container = document.getElementById('publication-section');
+
+  function updatePublicationLabels() {
+    const wrappers = container.querySelectorAll('.publication-wrapper');
+    wrappers.forEach((wrapper, index) => {
+      const headerBtn = wrapper.querySelector('.accordion-button');
+      if (headerBtn) headerBtn.innerText = `Publication Entry #${index + 1}`;
+    });
+
+    const counter = document.getElementById('publicationProgress');
+    if (counter) counter.innerText = wrappers.length;
+  }
+
+  function bindRemoveButton(wrapper) {
+    const removeBtn = wrapper.querySelector('.remove-publication-btn');
+    if (!removeBtn) return;
+
+    removeBtn.addEventListener('click', function () {
+      wrapper.remove();
+      updatePublicationLabels();
+    });
+  }
+
+  window.addPublication = function () {
+    const wrappers = container.querySelectorAll('.publication-wrapper');
+    const last = wrappers[wrappers.length - 1];
+    const clone = last.cloneNode(true);
+
+    // Clear all inputs
+    const inputs = clone.querySelectorAll('input');
+    inputs.forEach(input => {
+      if (input.type === 'checkbox' || input.type === 'radio') {
+        input.checked = false;
+      } else {
+        input.value = '';
+      }
+    });
+
+    // Accordion header and collapse
+    const timestamp = Date.now();
+    const collapseId = `publicationCollapse${timestamp}`;
+    const headingId = `publicationHeading${timestamp}`;
+
+    const accordionBtn = clone.querySelector('.accordion-button');
+    const accordionCollapse = clone.querySelector('.accordion-collapse');
+
+    if (accordionBtn && accordionCollapse) {
+      accordionBtn.classList.add('collapsed');
+      accordionBtn.setAttribute('data-bs-target', `#${collapseId}`);
+      accordionBtn.setAttribute('aria-controls', collapseId);
+
+      accordionCollapse.classList.remove('show');
+      accordionCollapse.id = collapseId;
+      accordionCollapse.setAttribute('aria-labelledby', headingId);
+    }
+
+    clone.querySelector('.remove-publication-btn').style.display = 'inline-block';
+
+    container.appendChild(clone);
+    bindRemoveButton(clone);
+    updatePublicationLabels();
+  };
+
+  // Initial setup
+  container.querySelectorAll('.publication-wrapper').forEach(wrapper => {
+    bindRemoveButton(wrapper);
+  });
+
+  updatePublicationLabels();
+});
+
+
+
+// Research
+document.addEventListener('DOMContentLoaded', function () {
+  const container = document.getElementById('researchProjectContainer');
+  const progressCounter = document.getElementById('researchProjectProgress');
+
+  function updateResearchLabels() {
+    const wrappers = container.querySelectorAll('.research-project-wrapper');
+    wrappers.forEach((wrapper, idx) => {
+      const button = wrapper.querySelector('.accordion-button');
+      if (button) {
+        button.innerText = `Research Project Entry #${idx + 1}`;
+      }
+
+      const removeBtn = wrapper.querySelector('.remove-research-project-btn');
+      if (removeBtn) {
+        removeBtn.style.display = wrappers.length > 1 ? 'inline-block' : 'none';
+      }
+    });
+
+    if (progressCounter) {
+      progressCounter.innerText = wrappers.length;
+    }
+  }
+
+  window.addResearchProject = function () {
+    const wrappers = container.querySelectorAll('.research-project-wrapper');
+    const lastWrapper = wrappers[wrappers.length - 1];
+    const clone = lastWrapper.cloneNode(true);
+
+    // Reset input fields
+    clone.querySelectorAll('input, select').forEach(input => {
+      if (input.type === 'file') {
+        input.value = '';
+      } else {
+        input.value = '';
+      }
+    });
+
+    // Unique collapse IDs
+    const newId = Date.now();
+    const accordionBtn = clone.querySelector('.accordion-button');
+    const accordionCollapse = clone.querySelector('.accordion-collapse');
+
+    if (accordionBtn && accordionCollapse) {
+      accordionBtn.classList.add('collapsed');
+      accordionBtn.setAttribute('data-bs-target', `#researchProjectCollapse${newId}`);
+      accordionBtn.setAttribute('aria-controls', `researchProjectCollapse${newId}`);
+
+      accordionCollapse.classList.remove('show');
+      accordionCollapse.id = `researchProjectCollapse${newId}`;
+    }
+
+    container.appendChild(clone);
+    updateResearchLabels();
+  };
+
+  window.removeResearchProjectRow = function (btn) {
+    const wrapper = btn.closest('.research-project-wrapper');
+    if (wrapper) {
+      wrapper.remove();
+      updateResearchLabels();
+    }
+  };
+
+  // Initialize
+  updateResearchLabels();
+});
+
+
+
+// Salary
+document.addEventListener('DOMContentLoaded', function () {
+  const salarySection = document.getElementById('salary-section');
+  const progressCounter = document.getElementById('salaryProgress');
+
+  function updateSalaryLabels() {
+    const wrappers = salarySection.querySelectorAll('.salary-wrapper');
+    if (progressCounter) progressCounter.innerText = wrappers.length;
+
+    wrappers.forEach((wrapper, index) => {
+      const removeBtn = wrapper.querySelector('.remove-salary-btn');
+      if (removeBtn) {
+        removeBtn.style.display = index === 0 ? 'none' : 'inline-block';
+      }
+    });
+  }
+
+  window.addSalaryRow = function () {
+    const wrappers = salarySection.querySelectorAll('.salary-wrapper');
+    const last = wrappers[wrappers.length - 1];
+    const clone = last.cloneNode(true);
+
+    // Clear inputs
+    clone.querySelectorAll('input, select').forEach(input => {
+      if (input.tagName === 'SELECT') {
+        input.selectedIndex = 0;
+      } else {
+        input.value = '';
+      }
+    });
+
+    salarySection.appendChild(clone);
+    updateSalaryLabels();
+  };
+
+  window.removeSalaryRow = function (btn) {
+    const wrapper = btn.closest('.salary-wrapper');
+    if (wrapper) {
+      wrapper.remove();
+      updateSalaryLabels();
+    }
+  };
+
+  updateSalaryLabels(); // Call initially on load
+});
+
+
+
+// Review & Submit
+document.getElementById('biodata-form').addEventListener('submit', async function (e) {
+  e.preventDefault();
+
+  const form = e.target;
+  const formData = new FormData(form);
+
+  // Hide alerts initially
+  document.getElementById('duplicateAlert')?.classList.add('d-none');
+  document.getElementById('successAlert')?.classList.add('d-none');
+
+  try {
+    const response = await fetch('/doctor-biodata/new', {
+      method: 'POST',
+      body: formData
+    });
+
+    const data = await response.json();
+
+    if (data.status === 'exists') {
+      showAlert('duplicateAlert');
+    } else if (data.status === 'success') {
+      showAlert('successAlert');
+
+      // ✅ Redirect after short delay
+      setTimeout(() => {
+        window.location.href = '/doctor-biodata';
+      }, 1000); // optional delay to show success alert
+    } else {
+      alert('Unexpected response: ' + JSON.stringify(data));
+    }
+  } catch (error) {
+    console.error('Submission error:', error);
+    alert('Submission failed due to a technical issue.');
+  }
+});
+
+function showAlert(id) {
+  const alertBox = document.getElementById(id);
+  if (alertBox) {
+    alertBox.classList.remove('d-none');
+    alertBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+}
+
+
+
+
+  // When the page has loaded
+  document.addEventListener('DOMContentLoaded', function () {
+    const submitBtn = document.getElementById('submitBtn');
+    if (submitBtn) {
+      submitBtn.addEventListener('click', function () {
+        document.getElementById('biodata-form').dispatchEvent(new Event('submit'));
+      });
+    }
+  });
+
+
+
+ let visibleAddressCount = 1;
+
+function showNextAddress() {
+  if (visibleAddressCount >= 5) return;
+
+  const nextWrapper = document.querySelector(`#addressCollapse${visibleAddressCount}`);
+  if (nextWrapper) {
+    // Collapse all others
+    for (let i = 0; i < 5; i++) {
+      const collapse = document.querySelector(`#addressCollapse${i}`);
+      if (collapse) collapse.classList.remove('show');
+    }
+
+    // Show wrapper
+    const wrapper = document.querySelector(`#addressHeading${visibleAddressCount}`)?.closest('.address-wrapper');
+    if (wrapper) wrapper.style.display = 'block';
+
+    nextWrapper.classList.add('show');
+    nextWrapper.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    visibleAddressCount++;
+    updateAddressUI();
+  }
+}
+
+function removeAddress(btn) {
+  const wrapper = btn.closest('.address-wrapper');
+  if (!wrapper) return;
+
+  wrapper.style.display = 'none';
+
+  // Collapse all
+  for (let i = 0; i < 5; i++) {
+    document.querySelector(`#addressCollapse${i}`)?.classList.remove('show');
+  }
+
+  // Expand first visible
+  for (let i = 0; i < 5; i++) {
+    const visibleWrapper = document.querySelector(`#addressCollapse${i}`);
+    if (document.querySelector(`#addressHeading${i}`)?.closest('.address-wrapper')?.style.display !== 'none') {
+      visibleWrapper?.classList.add('show');
+      break;
+    }
+  }
+
+  visibleAddressCount = document.querySelectorAll('.address-wrapper').length -
+                        document.querySelectorAll('.address-wrapper[style*="display: none"]').length;
+  updateAddressUI();
+}
+
+function updateAddressUI() {
+  const addBtn = document.getElementById('addAddressBtn');
+  const progress = document.getElementById('addressProgress');
+  if (addBtn) addBtn.disabled = visibleAddressCount >= 5;
+  if (progress) progress.innerText = `${visibleAddressCount}/5`;
+}
+
+
+
+
+
+
+let qualificationVisibleCount = 1;
+
+  function showNextQualification() {
+    if (qualificationVisibleCount >= 5) return;
+
+    const nextWrapper = document.querySelector(`#qualificationCollapse${qualificationVisibleCount}`);
+    if (nextWrapper) {
+      // Collapse all other qualification sections
+      for (let i = 0; i < 5; i++) {
+        const collapse = document.querySelector(`#qualificationCollapse${i}`);
+        if (collapse) collapse.classList.remove('show');
+      }
+
+      // Show next wrapper block
+      const wrapper = document.querySelector(`#qualificationHeading${qualificationVisibleCount}`)?.closest('.qualification-wrapper');
+      if (wrapper) wrapper.style.display = 'block';
+
+      nextWrapper.classList.add('show');
+      nextWrapper.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+      qualificationVisibleCount++;
+      updateQualificationUI();
+    }
+  }
+
+  function removeQualification(btn) {
+    const wrapper = btn.closest('.qualification-wrapper');
+    if (!wrapper) return;
+
+    wrapper.style.display = 'none';
+
+    // Collapse all
+    for (let i = 0; i < 5; i++) {
+      const collapse = document.querySelector(`#qualificationCollapse${i}`);
+      if (collapse) collapse.classList.remove('show');
+    }
+
+    // Expand the first visible one
+    for (let i = 0; i < 5; i++) {
+      const visibleWrapper = document.querySelector(`#qualificationCollapse${i}`);
+      const container = document.querySelector(`#qualificationHeading${i}`)?.closest('.qualification-wrapper');
+      if (container && container.style.display !== 'none') {
+        visibleWrapper?.classList.add('show');
+        break;
+      }
+    }
+
+    qualificationVisibleCount = document.querySelectorAll('.qualification-wrapper').length -
+                                document.querySelectorAll('.qualification-wrapper[style*="display: none"]').length;
+
+    updateQualificationUI();
+  }
+
+  function updateQualificationUI() {
+    const addBtn = document.getElementById('addQualificationBtn');
+    const progress = document.getElementById('qualificationProgress');
+    if (addBtn) addBtn.disabled = qualificationVisibleCount >= 5;
+    if (progress) progress.innerText = `${qualificationVisibleCount}/5`;
+  }
+
+  // Call initially on page load to sync progress
+  document.addEventListener('DOMContentLoaded', function () {
+    updateQualificationUI();
+  });
+
+
+
+
+
+let courseVisibleCount = 1;
+
+  function showNextCourse() {
+    if (courseVisibleCount >= 5) return;
+
+    const nextCollapse = document.querySelector(`#courseCollapse${courseVisibleCount}`);
+    if (nextCollapse) {
+      // Collapse all
+      for (let i = 0; i < 5; i++) {
+        document.querySelector(`#courseCollapse${i}`)?.classList.remove('show');
+      }
+
+      // Show the next course wrapper
+      const wrapper = document.querySelector(`#courseHeading${courseVisibleCount}`)?.closest('.course-wrapper');
+      if (wrapper) wrapper.style.display = 'block';
+
+      nextCollapse.classList.add('show');
+      nextCollapse.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+      courseVisibleCount++;
+      updateCourseUI();
+    }
+  }
+
+  function removeCourse(btn) {
+    const wrapper = btn.closest('.course-wrapper');
+    if (!wrapper) return;
+
+    wrapper.style.display = 'none';
+
+    // Collapse all
+    for (let i = 0; i < 5; i++) {
+      document.querySelector(`#courseCollapse${i}`)?.classList.remove('show');
+    }
+
+    // Expand the first visible course
+    for (let i = 0; i < 5; i++) {
+      const wrapper = document.querySelector(`#courseHeading${i}`)?.closest('.course-wrapper');
+      const collapse = document.querySelector(`#courseCollapse${i}`);
+      if (wrapper && wrapper.style.display !== 'none') {
+        collapse?.classList.add('show');
+        break;
+      }
+    }
+
+    courseVisibleCount = document.querySelectorAll('.course-wrapper').length -
+                         document.querySelectorAll('.course-wrapper[style*="display: none"]').length;
+
+    updateCourseUI();
+  }
+
+  function updateCourseUI() {
+    const addBtn = document.getElementById('addCourseBtn');
+    const progress = document.getElementById('courseProgress');
+    if (addBtn) addBtn.disabled = courseVisibleCount >= 5;
+    if (progress) progress.innerText = `${courseVisibleCount}/5`;
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    updateCourseUI();
+  });
+
+
+
+
+
+   let defenseVisibleCount = 1;
+
+  function showNextDefense() {
+    if (defenseVisibleCount >= 5) return;
+
+    const nextCollapse = document.querySelector(`#defenseCollapse${defenseVisibleCount}`);
+    if (nextCollapse) {
+      // Collapse all existing
+      for (let i = 0; i < 5; i++) {
+        document.querySelector(`#defenseCollapse${i}`)?.classList.remove('show');
+      }
+
+      // Show wrapper
+      const wrapper = document.querySelector(`#defenseHeading${defenseVisibleCount}`)?.closest('.indian-defense-wrapper');
+      if (wrapper) wrapper.style.display = 'block';
+
+      nextCollapse.classList.add('show');
+      nextCollapse.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+      defenseVisibleCount++;
+      updateDefenseUI();
+    }
+  }
+
+  function removeIndianDefenseRow(btn) {
+    const wrapper = btn.closest('.indian-defense-wrapper');
+    if (!wrapper) return;
+
+    wrapper.style.display = 'none';
+
+    // Collapse all
+    for (let i = 0; i < 5; i++) {
+      document.querySelector(`#defenseCollapse${i}`)?.classList.remove('show');
+    }
+
+    // Expand first visible
+    for (let i = 0; i < 5; i++) {
+      const w = document.querySelector(`#defenseHeading${i}`)?.closest('.indian-defense-wrapper');
+      const c = document.querySelector(`#defenseCollapse${i}`);
+      if (w && w.style.display !== 'none') {
+        c?.classList.add('show');
+        break;
+      }
+    }
+
+    defenseVisibleCount = document.querySelectorAll('.indian-defense-wrapper').length -
+                          document.querySelectorAll('.indian-defense-wrapper[style*="display: none"]').length;
+
+    updateDefenseUI();
+  }
+
+  function updateDefenseUI() {
+    const addBtn = document.getElementById('addDefenseBtn');
+    const progress = document.getElementById('defenseProgress');
+    if (addBtn) addBtn.disabled = defenseVisibleCount >= 5;
+    if (progress) progress.innerText = `${defenseVisibleCount}/5`;
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    updateDefenseUI();
+  });
+
+
+    function addMciMncRow() {
+        const container = document.getElementById('mcinmcContainer');
+        const firstRow = container.querySelector('.mcinmc-row');
+        const newRow = firstRow.cloneNode(true);
+
+        // Clear all inputs
+        newRow.querySelectorAll('input').forEach(input => {
+            if (input.type === 'checkbox') {
+                input.checked = false;
+            } else {
+                input.value = '';
+            }
+        });
+
+        // Show close button
+        newRow.querySelector('.remove-mcinmc-btn').classList.remove('d-none');
+
+        container.appendChild(newRow);
+    }
+
+    function removeMciMncRow(btn) {
+        btn.closest('.mcinmc-row').remove();
+    }
+
+
+
+let publicationVisibleCount = 1;
+
+function showNextPublication() {
+  if (publicationVisibleCount >= 5) return;
+
+  const nextCollapse = document.querySelector(`#publicationCollapse${publicationVisibleCount}`);
+  if (nextCollapse) {
+    // Collapse all
+    for (let i = 0; i < 5; i++) {
+      document.querySelector(`#publicationCollapse${i}`)?.classList.remove('show');
+    }
+
+    // Show the next publication wrapper
+    const wrapper = document.querySelector(`#publicationHeading${publicationVisibleCount}`)?.closest('.publication-wrapper');
+    if (wrapper) wrapper.style.display = 'block';
+
+    nextCollapse.classList.add('show');
+    nextCollapse.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    publicationVisibleCount++;
+    updatePublicationUI();
+  }
+}
+
+function removePublication(btn) {
+  const wrapper = btn.closest('.publication-wrapper');
+  if (!wrapper) return;
+
+  wrapper.style.display = 'none';
+
+  // Collapse all
+  for (let i = 0; i < 5; i++) {
+    document.querySelector(`#publicationCollapse${i}`)?.classList.remove('show');
+  }
+
+  // Expand the first visible publication
+  for (let i = 0; i < 5; i++) {
+    const wrapper = document.querySelector(`#publicationHeading${i}`)?.closest('.publication-wrapper');
+    const collapse = document.querySelector(`#publicationCollapse${i}`);
+    if (wrapper && wrapper.style.display !== 'none') {
+      collapse?.classList.add('show');
+      break;
+    }
+  }
+
+  publicationVisibleCount = document.querySelectorAll('.publication-wrapper').length -
+                           document.querySelectorAll('.publication-wrapper[style*="display: none"]').length;
+
+  updatePublicationUI();
+}
+
+function updatePublicationUI() {
+  const addBtn = document.getElementById('addPublicationBtn');
+  const progress = document.getElementById('publicationProgress');
+  if (addBtn) addBtn.disabled = publicationVisibleCount >= 5;
+  if (progress) progress.innerText = `${publicationVisibleCount}/5`;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  updatePublicationUI();
+});
+
+
+
+
+let researchProjectVisibleCount = 1;
+
+  function showNextResearchProject() {
+    if (researchProjectVisibleCount >= 5) return;
+
+    const nextCollapse = document.querySelector(`#researchProjectCollapse${researchProjectVisibleCount}`);
+    if (nextCollapse) {
+      // Collapse all others
+      for (let i = 0; i < 5; i++) {
+        document.querySelector(`#researchProjectCollapse${i}`)?.classList.remove('show');
+      }
+
+      // Show next wrapper
+      const wrapper = document.querySelector(`#researchProjectHeading${researchProjectVisibleCount}`)?.closest('.research-project-wrapper');
+      if (wrapper) wrapper.style.display = 'block';
+
+      nextCollapse.classList.add('show');
+      nextCollapse.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+      researchProjectVisibleCount++;
+      updateResearchProjectUI();
+    }
+  }
+
+  function removeResearchProjectRow(btn) {
+    const wrapper = btn.closest('.research-project-wrapper');
+    if (!wrapper) return;
+
+    wrapper.style.display = 'none';
+
+    // Collapse all
+    for (let i = 0; i < 5; i++) {
+      document.querySelector(`#researchProjectCollapse${i}`)?.classList.remove('show');
+    }
+
+    // Expand first visible
+    for (let i = 0; i < 5; i++) {
+      const wrapper = document.querySelector(`#researchProjectHeading${i}`)?.closest('.research-project-wrapper');
+      const collapse = document.querySelector(`#researchProjectCollapse${i}`);
+      if (wrapper && wrapper.style.display !== 'none') {
+        collapse?.classList.add('show');
+        break;
+      }
+    }
+
+    researchProjectVisibleCount = document.querySelectorAll('.research-project-wrapper').length -
+                                  document.querySelectorAll('.research-project-wrapper[style*="display: none"]').length;
+    updateResearchProjectUI();
+  }
+
+  function updateResearchProjectUI() {
+    const addBtn = document.getElementById('addResearchProjectBtn');
+    const progress = document.getElementById('researchProjectProgress');
+    if (addBtn) addBtn.disabled = researchProjectVisibleCount >= 5;
+    if (progress) progress.innerText = `${researchProjectVisibleCount}/5`;
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    updateResearchProjectUI();
+  });
+
+
+let salaryIndex = 1;
+
+function addSalaryRow() {
+  salaryIndex++;
+  const section = document.getElementById('salary-section');
+  const firstRow = section.querySelector('.salary-row');
+  const newRow = firstRow.cloneNode(true);
+
+  // Reset input values and update names
+  newRow.querySelectorAll('input').forEach(input => {
+    input.value = '';
+    const baseName = input.name.split('_')[0];
+    input.name = `${baseName}_${salaryIndex}`;
+  });
+
+  // Set current month-year by default
+  const monthInput = newRow.querySelector('input[type="month"]');
+  if (monthInput) {
+    const today = new Date();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const year = today.getFullYear();
+    monthInput.value = `${year}-${month}`;
+  }
+
+  // Show remove button
+  const removeBtn = newRow.querySelector('.remove-salary-btn');
+  removeBtn.classList.remove('d-none');
+
+  section.appendChild(newRow);
+}
+
+function removeSalaryRow(btn) {
+  const row = btn.closest('.salary-row');
+  if (row) row.remove();
+}
+
+
+
+
+
+  document.addEventListener("DOMContentLoaded", function () {
+  const now = new Date();
+  const currentMonth = now.toLocaleString('default', { month: 'long' });
+  const currentYear = now.getFullYear().toString();
+
+  const monthDropdowns = document.querySelectorAll('select[name^="month_"]');
+  const yearDropdowns = document.querySelectorAll('select[name^="year_"]');
+
+  monthDropdowns.forEach(dropdown => {
+    const option = dropdown.querySelector(`option[value="${currentMonth}"]`);
+    if (option) option.selected = true;
+  });
+
+  yearDropdowns.forEach(dropdown => {
+    const option = dropdown.querySelector(`option[value="${currentYear}"]`);
+    if (option) option.selected = true;
+  });
+});
+
+
+
+
+
+
+
+
+    function removeRow(button) {
+        const row = button.closest('.salary-row') ||
+                    button.closest('.research-project-row') ||
+                    button.closest('.publication-row') ||
+                    button.closest('.defense-row') ||
+                    button.closest('.language-row') ||
+                    button.closest('.address-row');
+        if (row) row.remove();
+    }
+
+
+
+
+
+
+// Review
+function populateReviewSummary() {
+  const summaryDiv = document.getElementById('review-summary');
+  summaryDiv.innerHTML = ''; // Clear existing summary
+
+  const form = document.getElementById('biodata-form');
+  const formData = new FormData(form);
+  const fieldMap = {};
+
+  for (let [key, value] of formData.entries()) {
+    if (!value || value === '' || value === 'na') continue;
+    if (value instanceof File && !value.name) continue;
+
+    let match = key.match(/^(.*)_([0-9]+)$/);
+    if (match) {
+      let fieldBase = match[1];
+      let index = match[2];
+      fieldMap[index] = fieldMap[index] || {};
+      fieldMap[index][fieldBase] = value;
+    } else {
+      fieldMap[key] = value;
+    }
+  }
+
+  // Handle non-grouped fields
+  for (let key in fieldMap) {
+    if (typeof fieldMap[key] !== 'object') {
+      const displayKey = key.replace(/_/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
+      const value = fieldMap[key];
+      const row = document.createElement('div');
+      row.classList.add('row', 'mb-1');
+      row.innerHTML = `
+        <div class="col-sm-5 fw-bold">${displayKey}:</div>
+        <div class="col-sm-7">${value}</div>`;
+      summaryDiv.appendChild(row);
+    }
+  }
+
+  // Handle grouped fields (like address_1, address_2)
+  Object.keys(fieldMap).forEach(index => {
+    const group = fieldMap[index];
+    if (typeof group === 'object') {
+      // Skip if all values are empty/na
+      const allEmpty = Object.values(group).every(val =>
+        val === '' || val === 'na' || val === '-- Select --'
+      );
+      if (allEmpty) return;
+
+      Object.entries(group).forEach(([field, val]) => {
+        const displayKey = field.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        const row = document.createElement('div');
+        row.classList.add('row', 'mb-1');
+        row.innerHTML = `
+          <div class="col-sm-5 fw-bold">${displayKey}:</div>
+          <div class="col-sm-7">${val}</div>`;
+        summaryDiv.appendChild(row);
+      });
+    }
+  });
+}
+
+
+
+
+<!--function populateReviewSummary() {-->
+<!--  const summaryDiv = document.getElementById('review-summary');-->
+<!--  summaryDiv.innerHTML = ''; // Clear existing summary-->
+
+<!--  const form = document.getElementById('biodata-form');-->
+<!--  const formData = new FormData(form);-->
+
+<!--  for (let [key, value] of formData.entries()) {-->
+<!--    // Skip empty or default fields-->
+<!--    if (!value || value === '' || value === 'na') continue;-->
+<!--    if (value instanceof File && !value.name) continue;-->
+
+<!--    // Format key nicely-->
+<!--    const displayKey = key-->
+<!--      .replace(/\[\]$/, '') // remove []-->
+<!--      .replace(/_/g, ' ')   // underscores to spaces-->
+<!--      .replace(/\b\w/g, char => char.toUpperCase()); // capitalize-->
+
+<!--    // Format value-->
+<!--    let displayValue = '';-->
+<!--    if (value instanceof File) {-->
+<!--      displayValue = value.name;-->
+<!--    } else {-->
+<!--      displayValue = value.trim();-->
+<!--    }-->
+
+<!--    // Create row-->
+<!--    const row = document.createElement('div');-->
+<!--    row.classList.add('row', 'mb-1');-->
+
+<!--    const labelCol = document.createElement('div');-->
+<!--    labelCol.classList.add('col-sm-5', 'fw-bold');-->
+<!--    labelCol.textContent = displayKey + ':';-->
+
+<!--    const valueCol = document.createElement('div');-->
+<!--    valueCol.classList.add('col-sm-7');-->
+<!--    valueCol.innerHTML = displayValue;-->
+
+<!--    row.appendChild(labelCol);-->
+<!--    row.appendChild(valueCol);-->
+<!--    summaryDiv.appendChild(row);-->
+<!--  }-->
+<!--}-->
+
+
+<!--function populateReviewSummary() {-->
+<!--  const summaryDiv = document.getElementById('review-summary');-->
+<!--  summaryDiv.innerHTML = ''; // Clear existing summary-->
+
+<!--  const form = document.getElementById('biodata-form');-->
+<!--  const formData = new FormData(form);-->
+
+<!--  // Iterate through all entries-->
+<!--  for (let [key, value] of formData.entries()) {-->
+<!--    const displayKey = key-->
+<!--      .replace(/\[\]$/, '')                      // remove []-->
+<!--      .replace(/_/g, ' ')                        // underscores to spaces-->
+<!--      .replace(/\b\w/g, char => char.toUpperCase()); // capitalize-->
+
+<!--    let displayValue;-->
+
+<!--    if (value instanceof File) {-->
+<!--      displayValue = value.name ? value.name : '<em>No file selected</em>';-->
+<!--    } else {-->
+<!--      displayValue = value.trim() ? value : '<em>Empty</em>';-->
+<!--    }-->
+
+<!--    const row = document.createElement('div');-->
+<!--    row.classList.add('row', 'mb-1');-->
+
+<!--    const labelCol = document.createElement('div');-->
+<!--    labelCol.classList.add('col-sm-5', 'fw-bold');-->
+<!--    labelCol.textContent = displayKey + ':';-->
+
+<!--    const valueCol = document.createElement('div');-->
+<!--    valueCol.classList.add('col-sm-7');-->
+<!--    valueCol.innerHTML = displayValue;-->
+
+<!--    row.appendChild(labelCol);-->
+<!--    row.appendChild(valueCol);-->
+<!--    summaryDiv.appendChild(row);-->
+<!--  }-->
+<!--}-->
+
+
+
+
+        function updateFileLabel(input) {
+        const displayId = input.id + "_display";
+        const fileName = input.files.length > 0 ? input.files[0].name : "No file selected";
+        document.getElementById(displayId).textContent = fileName;
+    }
+
+</script>
+{% endblock %}

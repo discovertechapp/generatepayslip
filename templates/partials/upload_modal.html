@@ -1,0 +1,29 @@
+{# templates/partials/upload_modal.html #}
+<!-- Reusable File Upload Modal -->
+<div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form id="fileUploadForm">
+        <div class="modal-header">
+          <h5 class="modal-title" id="uploadModalLabel">Upload Attachment</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="targetField">
+          <div class="mb-3">
+            <label class="form-label">Filename</label>
+            <input type="text" class="form-control" id="uploadFileName">
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Choose File</label>
+            <input type="file" class="form-control" id="uploadFileInput">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" onclick="handleUpload()">Upload</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

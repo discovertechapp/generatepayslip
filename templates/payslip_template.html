@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Payslip</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 8px;
+        }
+        th, td {
+            border: 1px solid #000;
+            padding: 5px;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+        background-color: #f0f0f0; /* Light gray background for headers only */
+        }
+
+        td {
+            background-color: #fff; /* Plain white for data cells */
+        }
+        .center {
+            text-align: center;
+        }
+        .center-td-values td {
+            text-align: center;
+        }
+        .no-border {
+            border: none;
+        }
+        .center-td-values th,
+      .center-td-values td {
+        text-align: center;
+        vertical-align: middle;
+        padding: 6px;
+        border: 1px solid black;
+      }
+      .center-td-values {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+      }
+        .header-table {
+      width: 100%;
+      border: none;
+      border-collapse: collapse;
+  }
+  .header-table td {
+      border: none;
+      vertical-align: middle;
+  }
+   .header-logo {
+        width: 80px;
+        padding-right: 10px;
+    }
+    .header-text {
+        text-align: center;
+    }
+    .header-text h2, .header-text p {
+        margin: 0;
+        line-height: 1.4;
+    }
+  .center-title {
+      text-align: center;
+      margin-top: 10px;
+      font-weight: bold;
+  }
+    </style>
+</head>
+<body>
+
+<table style="width: 100%; border-collapse: collapse; border: none;">
+  <tr>
+    <!-- Logo Left -->
+    <td style="width: 20%; text-align: left; border: none;">
+      <img src="data:image/jpeg;base64,{{ logo_base64 }}" width="80">
+    </td>
+
+    <!-- Header Text Centered -->
+    <td style="width: 60%; text-align: center; border: none;">
+      <h2 style="margin: 0;"><strong>SWAMY VIVEKANANDHA MEDICAL COLLEGE HOSPITAL AND RESEARCH INSTITUTE</strong></h2>
+      <p style="margin: 0;">Elayampalayam, Tiruchengode, Namakkal, Tamilnadu</p>
+    </td>
+
+    <!-- Empty Cell Right (for balance) -->
+    <td style="width: 20%; border: none;"></td>
+  </tr>
+</table>
+
+<!-- Subtitle Centered Below -->
+<h4 style="text-align: center; margin-top: 10px;">
+  <strong>PAYSLIP FOR THE MONTH OF {{ data['Month'] | upper }}</strong>
+</h4>
+
+
+
+
+<!--<table class="header-table">-->
+<!--      <tr>-->
+<!--        <td class="header-logo">-->
+<!--          <img src="data:image/jpeg;base64,{{ logo_base64 }}" width="80">-->
+<!--        </td>-->
+<!--        <td class="header-text">-->
+<!--          <h2><strong>VIVEKANANDHA</strong></h2>-->
+<!--          <p>Elayampalayam, Tiruchengode, Namakkal, Tamilnadu</p>-->
+<!--        </td>-->
+<!--      </tr>-->
+<!--    </table>-->
+<!--    <h2 class="center">VIVEKANANDHA<br>Elayampalayam, Tiruchengode, Namakkal, Tamilnadu</h2>-->
+<!--    <h3 class="center">PAYSLIP FOR THE MONTH OF {{ data['Month'] | upper }}</h3>-->
+
+    <table>
+        <tr>
+            <th>Emp. Code</th><td>{{ data['Emp.Code'] }}</td>
+            <th>Name</th><td>{{ data['Name'] }}</td>
+            <th>DOJ</th><td>{{ data['DOJ'] }}</td>
+        </tr>
+        <tr>
+            <th>Designation</th><td>{{ data['Designation'] }}</td>
+            <th>Department</th><td colspan="3">{{ data['Department'] }}</td>
+        </tr>
+        <tr>
+            <th>Pan No.</th><td>{{ data['Pan No'] }}</td>
+            <th>EPF No.</th><td>{{ data['EPF No'] }}</td>
+            <th>UAN No.</th><td>{{ data['UAN No'] }}</td>
+        </tr>
+        <tr>
+            <th>ESIC No.</th><td>{{ data['ESIC No'] }}</td>
+            <th>Bank Name</th><td>{{ data['Bank Name'] }}</td>
+            <th>IFSC Code</th><td>{{ data['IFSC Code'] }}</td>
+        </tr>
+        <tr>
+            <th>A/c No.</th><td colspan="5">{{ data['A/c No'] }}</td>
+        </tr>
+    </table>
+
+    <table class="center-td-values">
+        <tr>
+            <th>Month Days</th><th>Actual Working Days</th><th>Paid Days</th><th>Present Days</th>
+            <th>Weekoff</th><th>LOP</th><th>PH</th><th>Leave</th><th>Incentive</th>
+        </tr>
+        <tr>
+            <td>{{ data['Month Days'] }}</td><td>{{ data['Actual Working Days'] }}</td><td>{{ data['Paid Days'] }}</td><td>{{ data['Present Days'] }}</td>
+            <td>{{ data['Weekoff'] }}</td><td>{{ data['LOP Days'] }}</td><td>{{ data['PH'] }}</td><td>{{ data['Leave'] }}</td><td>{{ data['Incentive'] }}</td>
+        </tr>
+    </table>
+
+    <table>
+        <tr>
+            <th>Description</th>
+            <th>Actual</th>
+            <th>Earnings</th>
+            <th>Deduction Name</th>
+            <th>Deduction Value</th>
+        </tr>
+        <tr>
+            <td>Basic pay</td><td></td><td>{{ data['Basic Pay'] }}</td><td>PF</td><td>{{ data['PF'] }}</td>
+        </tr>
+        <tr>
+            <td>DA</td><td></td><td>{{ data['DA'] }}</td><td>ESIC</td><td>{{ data['ESIC'] }}</td>
+        </tr>
+        <tr>
+            <td>HRA</td><td></td><td>{{ data['HRA'] }}</td><td>TDS</td><td>{{ data['TDS'] }}</td>
+        </tr>
+        <tr>
+            <td>Grade pay</td><td></td><td>{{ data['Grade pay'] }}</td><td>Professional Tax</td><td>{{ data['Professional Tax'] }}</td>
+        </tr>
+        <tr>
+            <td>Educational Allowance</td><td></td><td>{{ data['Educational allowance'] }}</td><td>Advance Recovery</td><td>{{ data['Advance recovery'] }}</td>
+        </tr>
+        <tr>
+            <td>Conveyance Allowance</td><td></td><td>{{ data['Conveyance allowance'] }}</td><td>SQ Rent</td><td>{{ data['SQ rent'] }}</td>
+        </tr>
+        <tr>
+            <td>Marriage Allowance</td><td></td><td>{{ data['Marriage Allowance'] }}</td><td>Food</td><td>{{ data['Food'] }}</td>
+        </tr>
+        <tr>
+            <td>Incentive</td><td></td><td>{{ data['Incentive'] }}</td><td>Transport</td><td>{{ data['Transport'] }}</td>
+        </tr>
+        <tr>
+            <td>Arrear</td><td></td><td>{{ data['Arrear'] }}</td><td>Mobile</td><td>{{ data['Mobile'] }}</td>
+        </tr>
+        <tr>
+            <td></td><td></td><td></td><td>Staff club fund</td><td>{{ data['Staff club fund'] }}</td>
+        </tr>
+        <tr>
+            <td></td><td></td><td></td><td>GPA Insurance</td><td>{{ data['GPA Insurance'] }}</td>
+        </tr>
+<!--        <tr style="background-color: #f0f0f0;">-->
+<!--          <td colspan="5" style="height: 20px;"></td>-->
+<!--        </tr>-->
+        <tr>
+            <th>(A) Total</th><td></td><td>{{
+                data['Basic Pay'] | int +
+                data['DA'] | int +
+                data['HRA'] | int +
+                data['Grade pay'] | int +
+                data['Educational allowance'] | int +
+                data['Conveyance allowance'] | int +
+                data['Marriage Allowance'] | int +
+                data['Incentive'] | int +
+                data['Arrear'] | int
+            }}</td><td style="background-color: #f0f0f0;" ><strong>(B) Total Deduction</strong></td><td>{{
+                data['PF'] | int +
+                data['ESIC'] | int +
+                data['TDS'] | int +
+                data['Professional Tax'] | int +
+                data['Advance recovery'] | int +
+                data['SQ rent'] | int +
+                data['Food'] | int +
+                data['Transport'] | int +
+                data['Mobile'] | int +
+                data['Staff club fund'] | int +
+                data['GPA Insurance'] | int
+            }}</td>
+        </tr>
+        <tr>
+          <td colspan="3"><p><strong>Rupees:</strong> {{ net_pay_in_words }}</p></td><td style="background-color: #f0f0f0;" ><strong>(A-B) Net Pay:</strong></td><td>{{ data['Net pay'] }}</td>
+        </tr>
+    </table>
+
+
+    <h3>LOAN DETAILS</h3>
+    <table class="center-td-values">
+        <tr>
+            <th>Loan Type</th>
+            <th>Loan Amount</th>
+            <th>EMI</th>
+            <th>Deducted Till Date</th>
+            <th>Balance</th>
+            <th>Deducted For The Month</th>
+        </tr>
+        <tr>
+            <td>{{ data['Loan Type'] }}</td>
+            <td>{{ data['Loan Amount'] }}</td>
+            <td>{{ data['EMI'] }}</td>
+            <td>{{ data['Deducted Till Date'] }}</td>
+            <td>{{ data['Balance'] }}</td>
+            <td>{{ data['Deducted For The Month'] }}</td>
+        </tr>
+    </table>
+
+    <p class="center">This is a computer-generated payslip. Signature not required.</p>
+
+</body>
+</html>

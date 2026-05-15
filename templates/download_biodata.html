@@ -1,0 +1,351 @@
+{% extends "base.html" %}
+{% set hide_sidebar = True %}
+{% block title %}Download Doctor Biodata{% endblock %}
+
+
+{% block extra_styles %}
+<style>
+    body {
+        background-color: #e8f3f9;
+        font-family: 'Segoe UI', sans-serif;
+    }
+
+    .download-section {
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+
+    .form-check-label {
+        text-transform: capitalize;
+    }
+
+    /* ✅ This hides elements with the section-hidden class */
+    .section-hidden {
+        display: none !important;
+    }
+
+    .horizontal-scroll-container {
+    display: flex;
+    overflow-x: auto;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background: #f9f9f9;
+}
+
+    .section-item {
+        cursor: grab;
+        user-select: none;
+    }
+
+    .ghost {
+        opacity: 0.4;
+    }
+
+    .section-pane {
+        max-height: 250px;
+        min-height: 250px; /* ✅ Fix shrinking */
+        overflow-y: auto;
+        background-color: #f8f9fa;
+        border: 1px solid #ced4da;
+        border-radius: 6px;
+        padding: 6px;
+    }
+
+    .selected-highlight {
+        background-color: #d9f2e3;
+    }
+
+    .section-hidden {
+        display: none !important;
+    }
+</style>
+{% endblock %}
+
+
+{% block content %}
+<div class="container mt-4 download-section shadow-sm">
+    <h4 class="mb-3">Download Doctor Biodata</h4>
+    <a href="{{ url_for('doctor_biodata') }}" class="btn btn-secondary mb-4">← Back to Doctor Biodata</a>
+
+    <form method="POST" action="{{ url_for('download_biodata') }}">
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <label>College</label>
+                <select class="form-select" name="college">
+                    <option value="">-- Select --</option>
+                    {% for col in colleges %}
+                    <option value="{{ col }}">{{ col }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-4">
+                <label>Department</label>
+                <select class="form-select" name="department">
+                    <option value="">-- Select --</option>
+                    {% for dep in departments %}
+                    <option value="{{ dep }}">{{ dep }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-4">
+                <label>User</label>
+                <select class="form-select" name="user_id">
+                    <option value="">-- Select --</option>
+                    {% for uid in user_ids %}
+                    {% set uid_parts = uid.split('_', 1) %}
+                    <option value="{{ uid_parts[0] }}">{{ uid }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <label><strong>Select Sections to Include</strong></label>
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" name="only_attachment" id="only_attachment" checked>
+                <label class="form-check-label" for="only_attachment">Only Attachment Download</label>
+            </div>
+        </div>
+
+<div class="row mb-4">
+    <!-- Available Sections -->
+    <div class="col-md-6">
+        <label><strong>Available Sections</strong></label>
+        <ul id="availableSections" class="list-group section-pane">
+            {% for section in ['personal', 'experience', 'qualification', 'languages', 'proof', 'course', 'defense', 'mci_mnc', 'publication', 'research', 'salary'] %}
+            {% set has_attachment = section not in ['personal', 'languages', 'mci_mnc', 'salary'] %}
+            <li class="list-group-item d-flex align-items-center justify-content-between section-item {% if not has_attachment %}section-hidden{% endif %}"
+                data-section="{{ section }}"
+                data-has-attachment="{{ 'true' if has_attachment else 'false' }}">
+<!--                <span class="text-capitalize">{{ section.replace('_', ' ') }}</span>-->
+                <span class="text-capitalize section-label">{{ section.replace('_', ' ') }}</span>
+                <span class="text-muted">☰</span>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <!-- Selected Sections -->
+    <div class="col-md-6">
+        <label><strong>Selected Sections (Ordered)</strong></label>
+        <ul id="selectedSections" class="list-group section-pane">
+            <!-- Drag target -->
+        </ul>
+    </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+        <button type="submit" class="btn btn-primary">Download</button>
+    </form>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} mt-4">
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+<!--     {% if filtered %}
+    <div class="alert alert-success mt-4">
+        ✅ File exported successfully and added to download history.
+    </div>
+    {% endif %} -->
+</div>
+
+<!-- Download History Table -->
+<div class="container mt-4 mb-5 download-section shadow-sm">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">Download History</h5>
+        <form method="GET" action="{{ url_for('download_biodata') }}">
+            <button class="btn btn-sm btn-secondary">🔄 Refresh</button>
+        </form>
+    </div>
+    <table class="table table-bordered table-hover">
+        <thead class="table-primary">
+        <tr>
+            <th>#</th>
+            <th>File Name</th>
+            <th>Requested Time</th>
+            <th>Status</th>
+            <th>Selection</th>
+            <th>Action</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for item in download_history %}
+        <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ item.filename }}</td>
+            <td>{{ item.time }}</td>
+            <td>
+                {% if item.status == 'Completed' %}
+                    <span class="badge bg-success-subtle text-success">Completed</span>
+                {% elif item.status == 'In Progress' %}
+                    <span class="badge bg-warning text-dark">In Progress</span>
+                {% else %}
+                    <span class="badge bg-secondary">{{ item.status }}</span>
+                {% endif %}
+            </td>
+            <td>{{ item.selection or '-' }}</td>
+            <td>
+                {% if item.status == 'Completed' %}
+                    <a href="{{ url_for('static', filename='downloads/' + item.filename) }}"
+                       class="btn btn-sm btn-outline-primary" title="Download" target="_blank">
+                        ⬇️ Download
+                    </a>
+                {% else %}
+                    <span class="text-muted">-</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+        {% if not download_history %}
+        <tr>
+            <td colspan="6" class="text-center text-muted">No downloads yet.</td>
+        </tr>
+        {% endif %}
+        </tbody>
+    </table>
+
+    <p class="text-muted small mt-2">
+        🔔 <em>Note: Download history shows only the last 2 weeks or the most recent 50 entries.</em>
+    </p>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const onlyAttachmentCheckbox = document.getElementById('only_attachment');
+    const availableList = document.getElementById('availableSections');
+    const selectedList = document.getElementById('selectedSections');
+
+    function updateSectionVisibility() {
+        const hide = onlyAttachmentCheckbox.checked;
+
+        availableList.querySelectorAll('.section-item').forEach(item => {
+            const hasAttachment = item.dataset.hasAttachment === 'true';
+            item.classList.toggle('section-hidden', hide && !hasAttachment);
+        });
+    }
+
+    // Initial run
+    updateSectionVisibility();
+    onlyAttachmentCheckbox.addEventListener('change', updateSectionVisibility);
+
+    // Setup Sortable.js
+    new Sortable(availableList, {
+        group: { name: 'sections', pull: 'clone', put: false },
+        animation: 150,
+        sort: false,
+        ghostClass: 'ghost',
+    });
+
+    new Sortable(selectedList, {
+        group: { name: 'sections', pull: true, put: true },
+        animation: 150,
+        ghostClass: 'ghost',
+        onAdd: function (evt) {
+            const item = evt.item;
+            item.classList.add('selected-highlight');
+
+            // Remove if already exists
+            const existing = [...selectedList.querySelectorAll('.section-item')];
+            const seen = new Set();
+            for (const el of existing) {
+                const sec = el.dataset.section;
+                if (seen.has(sec)) {
+                    el.remove();  // remove duplicate
+                } else {
+                    seen.add(sec);
+                }
+            }
+        }
+    });
+
+    // Send section order on submit
+    document.querySelector('form').addEventListener('submit', function () {
+        const selected = [...selectedList.querySelectorAll('.section-item')];
+        const orderedSections = selected.map(item => item.dataset.section);
+
+        const hiddenInput = document.createElement('input');
+        hiddenInput.type = 'hidden';
+        hiddenInput.name = 'ordered_sections';
+        hiddenInput.value = orderedSections.join(',');
+        this.appendChild(hiddenInput);
+    });
+});
+</script>
+
+
+
+
+
+
+
+<!--<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>-->
+<!--<script>-->
+<!--document.addEventListener('DOMContentLoaded', function () {-->
+<!--    const onlyAttachmentCheckbox = document.getElementById('only_attachment');-->
+<!--    const sectionList = document.getElementById('sectionCheckboxes');-->
+
+<!--    // ✅ Hide non-attachment sections if "Only Attachment" is checked-->
+<!--    function updateSectionVisibility() {-->
+<!--        const hide = onlyAttachmentCheckbox.checked;-->
+<!--        sectionList.querySelectorAll('.section-item').forEach(item => {-->
+<!--            const hasAttachment = item.dataset.hasAttachment === 'true';-->
+<!--            if (!hasAttachment) {-->
+<!--                item.classList.toggle('section-hidden', hide);-->
+<!--                item.querySelector('input').checked = !hide;-->
+<!--            }-->
+<!--        });-->
+<!--    }-->
+
+<!--    onlyAttachmentCheckbox.addEventListener('change', updateSectionVisibility);-->
+<!--    updateSectionVisibility(); // Initial check on page load-->
+
+<!--    // ✅ Enable drag & drop using Sortable.js-->
+<!--    new Sortable(sectionList, {-->
+<!--        animation: 150,-->
+<!--        handle: 'span:last-child',  // Drag handle (☰)-->
+<!--    });-->
+
+<!--    // ✅ On form submit, send ordered list of selected sections-->
+<!--    document.querySelector('form').addEventListener('submit', function (e) {-->
+<!--        const orderedSections = [];-->
+<!--        sectionList.querySelectorAll('.section-item').forEach(item => {-->
+<!--            const input = item.querySelector('input');-->
+<!--            if (input.checked) {-->
+<!--                orderedSections.push(input.value);-->
+<!--            }-->
+<!--        });-->
+
+<!--        const hiddenInput = document.createElement('input');-->
+<!--        hiddenInput.type = 'hidden';-->
+<!--        hiddenInput.name = 'ordered_sections';-->
+<!--        hiddenInput.value = orderedSections.join(',');-->
+<!--        this.appendChild(hiddenInput);-->
+<!--    });-->
+<!--});-->
+<!--</script>-->
+
+
+{% endblock %}

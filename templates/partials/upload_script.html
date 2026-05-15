@@ -1,0 +1,29 @@
+{# templates/partials/upload_script.html #}
+<script>
+    function openUploadModal(fieldId) {
+        document.getElementById('targetField').value = fieldId;
+        document.getElementById('uploadFileName').value = '';
+        document.getElementById('uploadFileInput').value = '';
+        var uploadModal = new bootstrap.Modal(document.getElementById('uploadModal'));
+        uploadModal.show();
+    }
+
+    function handleUpload() {
+        const fieldId = document.getElementById('targetField').value;
+        const fileName = document.getElementById('uploadFileName').value;
+        const fileInput = document.getElementById('uploadFileInput');
+
+        if (!fileName || !fileInput.files.length) {
+            alert("Please provide a file name and select a file.");
+            return;
+        }
+
+        const file = fileInput.files[0];
+        const displayDiv = document.getElementById(fieldId + '_display');
+
+        displayDiv.innerHTML = `<strong>Uploaded:</strong> ${fileName} (${file.name})`;
+
+        const modal = bootstrap.Modal.getInstance(document.getElementById('uploadModal'));
+        modal.hide();
+    }
+</script>

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% block title %}VEI Hospital{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #f1f6fb;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .sidebar {
+            width: 250px;
+            height: 100vh;
+            position: fixed;
+            background-color: #0d47a1;
+            color: white;
+            padding-top: 20px;
+        }
+
+        .sidebar .nav-link {
+            color: white;
+        }
+
+        .sidebar .nav-link.active,
+        .sidebar .nav-link:hover {
+            background-color: #1565c0;
+            font-weight: bold;
+        }
+
+        .content {
+            {% if not hide_sidebar %}
+            margin-left: 250px;
+            {% endif %}
+        }
+
+        .topbar {
+            height: 60px;
+            background-color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 0 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+    </style>
+    {% block extra_styles %}{% endblock %}
+</head>
+<body>
+
+{% if not hide_sidebar %}
+<!-- Sidebar -->
+<div class="sidebar d-flex flex-column position-fixed">
+    <h5 class="text-center mb-4">VEI Hospital</h5>
+    <nav class="nav flex-column px-3">
+        <a class="nav-link {% if request.path == url_for('home') %}active{% endif %}" href="{{ url_for('home') }}">🏠 Home</a>
+        <a class="nav-link {% if request.path.startswith('/doctor_biodata') %}active{% endif %}" href="{{ url_for('doctor_biodata') }}">👨‍⚕️ Doctor Biodata</a>
+    </nav>
+</div>
+{% endif %}
+
+<!-- Topbar -->
+<div class="content">
+    <div class="topbar">
+        <div class="dropdown">
+            <a class="btn btn-light dropdown-toggle" href="#" role="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-user"></i> Admin
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                <li><a class="dropdown-item" href="{{ url_for('logout') }}">Logout</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Main Page Content -->
+    <div class="container mt-4">
+        {% block content %}{% endblock %}
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+{% block extra_scripts %}{% endblock %}
+</body>
+</html>
